@@ -1,0 +1,9 @@
+E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\bin\Debug\CreateRemote.exe.config
+E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\bin\Debug\CreateRemote.exe
+E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\bin\Debug\CreateRemote.pdb
+E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\obj\Debug\CreateRemote.Form1.resources
+E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\obj\Debug\CreateRemote.Properties.Resources.resources
+E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\obj\Debug\CreateRemote.csproj.GenerateResource.Cache
+E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\obj\Debug\CreateRemote.exe
+E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\obj\Debug\CreateRemote.pdb
+E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\obj\Debug\CreateRemote.csprojResolveAssemblyReference.cache
