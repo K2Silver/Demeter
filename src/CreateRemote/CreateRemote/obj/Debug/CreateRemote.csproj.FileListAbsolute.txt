@@ -7,3 +7,11 @@ E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\obj\Debug\CreateRemote.csproj
 E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\obj\Debug\CreateRemote.exe
 E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\obj\Debug\CreateRemote.pdb
 E:\ECE 4180\FinalProject\CreateRemote\CreateRemote\obj\Debug\CreateRemote.csprojResolveAssemblyReference.cache
+\\prism.nas.gatech.edu\kkozuma3\ECE\Downloads\CreateRemote\CreateRemote\bin\Debug\CreateRemote.exe.config
+\\prism.nas.gatech.edu\kkozuma3\ECE\Downloads\CreateRemote\CreateRemote\bin\Debug\CreateRemote.exe
+\\prism.nas.gatech.edu\kkozuma3\ECE\Downloads\CreateRemote\CreateRemote\bin\Debug\CreateRemote.pdb
+\\prism.nas.gatech.edu\kkozuma3\ECE\Downloads\CreateRemote\CreateRemote\obj\Debug\CreateRemote.Form1.resources
+\\prism.nas.gatech.edu\kkozuma3\ECE\Downloads\CreateRemote\CreateRemote\obj\Debug\CreateRemote.Properties.Resources.resources
+\\prism.nas.gatech.edu\kkozuma3\ECE\Downloads\CreateRemote\CreateRemote\obj\Debug\CreateRemote.csproj.GenerateResource.Cache
+\\prism.nas.gatech.edu\kkozuma3\ECE\Downloads\CreateRemote\CreateRemote\obj\Debug\CreateRemote.exe
+\\prism.nas.gatech.edu\kkozuma3\ECE\Downloads\CreateRemote\CreateRemote\obj\Debug\CreateRemote.pdb

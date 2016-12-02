@@ -209,32 +209,32 @@ def dispatch_order(order):
     print ("Sandwich with " + order[COL_INGREDIENTS] + " delivering to " + order[COL_LOCATION])
     ingredient_code = parse_ingredients(order[COL_INGREDIENTS])
     print ("Running command \"/m_sand/run " + str(ingredient_code) + "\"")
-    ser.write("/m_sand/run " + ingredient_code)
+    ser.write("/m_sand/run " + str(ingredient_code))
 
 # Send next order by dispatching order to microcontroller and updating status
 def send_next_order():
     json_response = table_get_all_orders()
     num_orders = json_response['Count'];
     if (num_orders != 0):
-    print ("Found next order ...")
-    next_order = find_next_order(json_response["Items"])
-
-        # Update status of order to delivering
-    next_order[COL_STATUS] = STATUS_DELIVERING
-    update_order(next_order)
+        print ("Found next order ...")
+        next_order = find_next_order(json_response["Items"])
 
         # Dispatch order to dispenser
-    dispatch_order(next_order)
+        dispatch_order(next_order)
+
+        # Update status of order to delivering
+        next_order[COL_STATUS] = STATUS_DELIVERING
+        update_order(next_order)
 
         # Return true if order updated successfully
-    return True
+        return True
     else: # Else, return false
         return False
 
 # Attempt to open serial connection
 ser = serial.Serial()
 ser.baudrate = 9600
-ser.port = 'COM30'
+ser.port = 'COM4'
 ser.open()
 if(not ser.is_open):
     print("Error opening COM port")
@@ -245,11 +245,12 @@ try:
     while True:
     # Check if delivering any orders
     # If not, send a new order
-    if (not is_delivering_order()):
-    send_next_order()
-    else:
-    print ("Delivering now ...")
-    time.sleep(10) # sleep for 10 seconds (not overload database server)
+        if (not is_delivering_order()):
+            send_next_order()
+            print ("Order sent ...")
+        else:
+            print ("Delivering now ...")
+        time.sleep(10) # sleep for 10 seconds (not overload database server)
 
 # Keyboard interrupt (Ctrl-C) pressed, exit program
 except KeyboardInterrupt:
