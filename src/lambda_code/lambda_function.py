@@ -74,7 +74,7 @@ def insertOrder(customerid, timestamp, ingredients, location):
 # Retrieve orders from table using customerid
 def getOrder(customerid):
     table = dynamodb.Table('Orders')
-    
+
     response = table.get_item(
         Key={
             COL_CUSTOMERID: customerid
@@ -87,7 +87,7 @@ def getOrder(customerid):
 # Retrieve orders from table using customerid
 def delOrder(customerid):
     table = dynamodb.Table('Orders')
-    
+
     response = table.delete_item(
         Key={
             COL_CUSTOMERID: customerid
@@ -137,10 +137,10 @@ def get_welcome_response():
         SES_LOCATION: None,
         SES_INGREDIENTS: None
     }
-    
+
     card_title = "Welcome"
     speech_output = "May I take your order?"
-    
+
     # If the user either does not reply to the welcome message or says something
     # that is not understood, they will be prompted again with this text
     reprompt_text = "Please tell me the order you want to place, " \
@@ -148,7 +148,7 @@ def get_welcome_response():
     should_end_session = False
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
-        
+
 # Order response
 def get_order_response(intent, session, timestamp):
     session_attributes = {
@@ -156,29 +156,29 @@ def get_order_response(intent, session, timestamp):
         SES_INGREDIENTS: None,
         SES_STATUS: CONFIRM_NEW_ORDER
     }
-    
+
     ingredients = None
     location = None
-    
+
     if 'OrderText' in intent['slots']:
         ingredients = intent['slots']['OrderText']['value']
         session_attributes[SES_INGREDIENTS] = ingredients
-        
+
     if 'Location' in intent['slots']:
         location = intent['slots']['Location']['value']
         session_attributes[SES_LOCATION] = location
-    
+
     if (ingredients is not None and location is not None):
         speech_output = "You ordered a sandwich with " + \
                     ingredients + ' which will be delivered to ' + location + \
                         ". Is that correct?"
         reprompt_text = "Is your order correct?"
-    
+
     should_end_session = False
-    
+
     return build_response(session_attributes, build_speechlet_response(
         intent['name'], speech_output, reprompt_text, should_end_session))
-        
+
 # Check order response
 def get_check_order_response(intent, session, timestamp):
     card_title = intent['name']
@@ -188,10 +188,10 @@ def get_check_order_response(intent, session, timestamp):
         SES_STATUS: ''
     }
     should_end_session = False
-    
+
     customerid = session['user']['userId']
     response = getOrder(customerid)
-    
+
     if ('Item' in response):
         ingredients = response['Item'][COL_INGREDIENTS]
         location = response['Item'][COL_LOCATION]
@@ -215,7 +215,7 @@ def get_check_order_response(intent, session, timestamp):
                     "Would you like to order a sandwich?"
         reprompt_text= "There were no pending orders associated with you. " + \
                     "Would you like to order a sandwich?"
-    
+
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
 
@@ -227,32 +227,32 @@ def handle_yes_response(intent, session, timestamp):
     order_type = None
     speech_output = ""
     should_end_session = True
-    
+
     session_attributes = session['attributes']
 
     # Get attributes from session
     ingredients = session['attributes'][SES_INGREDIENTS]
     location = session['attributes'][SES_LOCATION]
     session_status = session['attributes'][SES_STATUS]
-    
+
     # Cancel old order
     if (session_status == CONFIRM_OLD_ORDER):
         customerid = session['user']['userId']
         delOrder(customerid)
         speech_output = "Your order was removed from the queue. Thank you and goodbye!"
-    
+
     # Confirm new order
     elif (session_status == CONFIRM_NEW_ORDER):
         customerid = session['user']['userId']
         insertOrder(customerid, timestamp, ingredients, location)
         speech_output = "Your order was placed. Please wait for your sandwich to be delivered."
-    
+
     elif (session_status == ORDER_NEW_SANDWICH):
         return get_welcome_response()
 
     return build_response(session_attributes, build_speechlet_response(
         intent['name'], speech_output, reprompt_text, should_end_session))
-        
+
 def handle_no_response(intent, session, timestamp):
     reprompt_text = None
     ingredients = None
@@ -260,36 +260,36 @@ def handle_no_response(intent, session, timestamp):
     order_type = None
     speech_output = ""
     should_end_session = True
-    
+
     session_attributes = session['attributes']
 
     # Get attributes from session
     ingredients = session['attributes'][SES_INGREDIENTS]
     location = session['attributes'][SES_LOCATION]
     session_status = session['attributes'][SES_STATUS]
-    
+
     # Give response to old order
     if (session_status == CONFIRM_OLD_ORDER):
         speech_output = "Okay! Please wait for your sandwich."
         return build_response(session_attributes, build_speechlet_response(
             intent['name'], speech_output, reprompt_text, should_end_session))
-    
+
     # Ask to take order again
     elif (session_status == CONFIRM_NEW_ORDER):
         return get_welcome_response()
 
-    
+
     return handle_session_end_request()
 
 def handle_session_end_request():
     card_title = "Session Ended"
     speech_output = "Thank you and goodbye!"
-    
+
     # Setting this to true ends the session and exits the skill.
     should_end_session = True
     return build_response({}, build_speechlet_response(
         card_title, speech_output, None, should_end_session))
-        
+
 # --------------- Events ------------------
 
 # Called when session starts
@@ -300,16 +300,16 @@ def on_session_started(session_started_request, session):
 
 # Called when launched without specifying any info
 def on_launch(launch_request, session):
-    
+
     print("on_launch requestId=" + launch_request['requestId'] +
           ", sessionId=" + session['sessionId'])
-          
+
     # Dispatch to skill's launch
     return get_welcome_response()
 
 # Called when intent specified
 def on_intent(intent_request, session):
-    
+
     print("on_intent requestId=" + intent_request['requestId'] +
           ", sessionId=" + session['sessionId'])
 

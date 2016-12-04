@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.IO.Ports;
+using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading;
 
@@ -48,6 +49,9 @@ namespace CreateRemote
 
     public partial class Form1 : Form
     {
+        public string python = @"C:\Python27\python.exe";
+        public string PYTHON_SCRIPT_UPDATE_TABLE = ("\"" + Directory.GetCurrentDirectory() + "\\..\\..\\..\\python_scripts\\update_table.py" + "\"");
+
         public SerialPort port;
         public Int16 left = 20; // default speed left wheel
         public Int16 right = 20; // default speed right wheel
@@ -57,7 +61,7 @@ namespace CreateRemote
 
         // Constants
         public volatile short d45 = 92; // turning distance for 45 degrees when both wheels are turning
-        public static readonly short d_block = 200;
+        public static readonly short d_block = 300;
 
         // variables for control system
         public volatile short new_l, old_l, l, base_l, new_r, old_r, r, base_r;
@@ -69,14 +73,13 @@ namespace CreateRemote
         
         // Flags
         public volatile bool setBase = true;
-        public volatile bool turning = false;
+        public volatile bool move_turn = false;
         public volatile bool move_forward = false;
-        public volatile bool turn_right = false;        
-        public volatile bool turn_left = false;
         public volatile bool executingCommand = false;
+        public volatile bool docked = true;
 
         // List of commands to execute
-        public short[] commandList;
+        public List<DirectionCommand> commandList;
         DirectionCommand currentCommand = DirectionCommand.NONE;
 
         // Background workers
@@ -102,7 +105,7 @@ namespace CreateRemote
             }
             else
             {
-                comboBoxCOM.Text = comPortList[0];
+                comboBoxCOM.Text = comPortList[comPortList.Length - 1];
             }
 
         }
@@ -140,11 +143,16 @@ namespace CreateRemote
             SerialDataReceivedEventHandler(port_DataReceived);
 
             bwUpdateValues = new BackgroundWorker();
-            bwExecuteCommands = new BackgroundWorker();
             bwUpdateValues.DoWork += new DoWorkEventHandler(backgroundWorker_updateValues);
-            bwExecuteCommands.DoWork += new DoWorkEventHandler(backgroundWorker_move);
-
             bwUpdateValues.RunWorkerAsync();
+
+            bwExecuteCommands = new BackgroundWorker();
+            bwExecuteCommands.DoWork += new DoWorkEventHandler(backgroundWorker_move);
+            bwExecuteCommands.WorkerSupportsCancellation = true;
+
+            btnStart.Enabled = false;
+
+            commandList = new List<DirectionCommand>();
         }
         // Stop Button - turn off drive motors
         private void btnStop_Click(object sender, EventArgs e)
@@ -258,13 +266,14 @@ namespace CreateRemote
 
         // Checkbox to display raw sensor data on console for debug
         // delays response a bit - data backs up in buffers when on
-        private void checkBox6_CheckStateChanged(object sender,
+        private void checkBoxRawSensor_CheckStateChanged(object sender,
         EventArgs e)
         {
             raw_sensor_debug = chkboxDisplayRaw.Checked;
         }
+
         // Seek Dock
-        private void button9_Click(object sender, EventArgs e)
+        private void btnDock_Click(object sender, EventArgs e)
         {
             port.Write(new byte[] { (byte)Commands.CoverandDock }, 0, 1);
         }
@@ -273,49 +282,57 @@ namespace CreateRemote
         private void btnNorth_Click(object sender, EventArgs e)
         {
             // Setcommand and run in worker background thread
-            commandList = new short[] {DirectionCommand.N.Code};
+            commandList.Clear();
+            commandList.Add(DirectionCommand.N);
             bwExecuteCommands.RunWorkerAsync();
         }
         // 45 degree and sqrt(2) distance
         private void btnNorthEast_Click(object sender, EventArgs e)
         {
-            commandList = new short[] { DirectionCommand.NE.Code };
+            commandList.Clear();
+            commandList.Add(DirectionCommand.NE);
             bwExecuteCommands.RunWorkerAsync();
         }
         // 90 degree and 1 distance
         private void btnEast_Click(object sender, EventArgs e)
         {
-            commandList = new short[] { DirectionCommand.E.Code };
+            commandList.Clear();
+            commandList.Add(DirectionCommand.E);
             bwExecuteCommands.RunWorkerAsync();
         }
         // 135 degree and sqrt(2) distance
         private void btnSouthEast_Click(object sender, EventArgs e)
         {
-            commandList = new short[] { DirectionCommand.SE.Code };
+            commandList.Clear();
+            commandList.Add(DirectionCommand.SE);
             bwExecuteCommands.RunWorkerAsync();
         }
         // 180 degree and 1 distance
         private void btnSouth_Click(object sender, EventArgs e)
         {
-            commandList = new short[] { DirectionCommand.S.Code };
+            commandList.Clear();
+            commandList.Add(DirectionCommand.S);
             bwExecuteCommands.RunWorkerAsync();
         }
         // 225 degree and sqrt(2) distance
         private void btnSouthWest_Click(object sender, EventArgs e)
         {
-            commandList = new short[] { DirectionCommand.SW.Code };
+            commandList.Clear();
+            commandList.Add(DirectionCommand.SW);
             bwExecuteCommands.RunWorkerAsync();
         }
         // 270 degree and 1 distance
         private void btnWest_Click(object sender, EventArgs e)
         {
-            commandList = new short[] { DirectionCommand.W.Code };
+            commandList.Clear();
+            commandList.Add(DirectionCommand.W);
             bwExecuteCommands.RunWorkerAsync();
         }
         // 315 degree and sqrt(2) distance
         private void btnNorthWest_Click(object sender, EventArgs e)
         {
-            commandList = new short[] { DirectionCommand.NW.Code };
+            commandList.Clear();
+            commandList.Add(DirectionCommand.NW);
             bwExecuteCommands.RunWorkerAsync();
         }
 
@@ -328,70 +345,89 @@ namespace CreateRemote
 	    private void backgroundWorker_move(object sender, DoWorkEventArgs e)
         {
 
-            foreach (short command in commandList)
+            for (int i = 0; i < commandList.Count; i++)
             {
+                DirectionCommand command = commandList[i];
                 // Range check
-                if ((command > 7) || (command < 0))
+                if ((command.Code > 7) || (command.Code < 0))
                 {
-
                     SetText(textBoxReceived, "Invalid");
                     btnSend.Enabled = true;
                     return;
                 }
-                // Set current command
-                SetText(textBoxReceived, command.ToString());
-                currentCommand = DirectionCommand.getCommand(command);
+                // Show current command in square brackets
+                StringBuilder sb = new StringBuilder();
+                for (int j = 0; j < commandList.Count; j++)
+                {
+                    if (i == j)
+                    {
+                        sb.Append("[");
+                        sb.Append(commandList[j].ToString());
+                        sb.Append("]");
+                    }
+                    else
+                    {
+                        sb.Append(commandList[j].ToString());
+                    }
+                    sb.Append(",");
+                }
+                SetText(textBoxReceived, sb.ToString());
+                currentCommand = command;
                 executingCommand = true;
                 new_distance = (short)(d_block * currentCommand.Multiplier);
                 new_angle = (short) currentCommand.Angle;
-                short diff = mod((short)(new_angle - angle), 360);
-                if (diff == 0)
-                {
-                    turn_right = false;
-                    turn_left = false;
-                }
-                else if (diff < 180)
-                {
-                    turn_right = true;
-                    turn_left = false;
-                }
-                else //if (diff < 180)
-                {
-                    turn_right = false;
-                    turn_left = true;
-                }
+
+                move_turn = true;
                 move_forward = true;
 
                 // Loop until execution of command finished
                 while (executingCommand)
                 {
-                    if (turn_right)
+                    if (docked)
                     {
-                        if ((short) (mod((short)(new_angle - angle), 360) - 180) < 0)
+                        // TODO: temporary fix for bug of docking after moving backwards
+                        temp_l = l;
+                        while (temp_l - 50 < l)
+                        {
+                            moveBackward();
+                        }
+
+                        port.Write(new byte[] { (byte)Commands.Demo, (byte)(255) }, 0, 1);
+                        port.Write(new byte[] { (byte)Commands.Start, (byte)Commands.SafeMode }, 0, 2);
+                        Thread.Sleep(100);
+                        System.Diagnostics.Debug.WriteLine("Requesting data from bot");
+                        port.Write(new byte[] { (byte)Commands.Stream, 2, (byte)Sensors.LeftEncoderCounts,
+                             (byte)Sensors.RightEncoderCounts}, 0, 4);
+                        Thread.Sleep(200);
+                        //stop();
+                        //System.Diagnostics.Stopwatch s = new System.Diagnostics.Stopwatch();
+                        //s.Start();
+                        //while (s.Elapsed < TimeSpan.FromSeconds(2))
+                        //{
+                        //    ClickButton(btnReverse);
+
+                        //}
+
+                        docked = false;
+                    }
+                    else if (move_turn)
+                    {
+                        // Calculate value to determine which way to turn
+                        short turnval = mod((short)(angle - new_angle - 180), 360);
+                        SetText(textBoxAngleCalc, turnval.ToString());
+
+                        if (turnval <= 181 && turnval >= 179) 
+                        {
+                            move_turn = false;
+                            temp_l = l;
+                        }
+                        else if (turnval < 179)
                         {
                             turnRight();
                         }
-                        else
-                        {
-                            stop();
-                            move_forward = true;
-                            turn_right = false;
-                            temp_l = l;
-                        }
-                    }
-
-                    else if (turn_left)
-                    {
-                        if ((short)(mod((short)(new_angle - angle), 360) - 180) > 0)
+                        else if (turnval > 181)
                         {
                             turnLeft();
-                        }
-                        else
-                        {
-                            stop();
-                            move_forward = true;
-                            turn_left = false;
-                            temp_l = l;
                         }
                     }
 
@@ -401,14 +437,14 @@ namespace CreateRemote
                         {
                             moveForward();
                         }
-                        else
+                        else if ((temp_l + new_distance) <= l)
                         {
-                            if ((temp_l + new_distance) <= l)
-                            {
-                                stop();
-                                move_forward = false;
-                                executingCommand = false;
-                            }
+                            stop();
+                            move_forward = false;
+                            executingCommand = false;
+                        }
+                        else // TODO: doesn't seem to reach 200
+                        {
                         }
                     }
                     else // End command execution
@@ -416,14 +452,40 @@ namespace CreateRemote
                         executingCommand = false;
                         Thread.Sleep(500);
                     }
-                    Thread.Sleep(0);
+                    Thread.Sleep(0); // Pass to different thread
                 }
             }
 
-            // Clear received and enable button
-                SetText(textBoxReceived, "Finished");
+            // Execution finished, clear received and enable button
+            SetText(textBoxReceived, "Finished");
 
+            SetText(textBoxReceived, run_python(PYTHON_SCRIPT_UPDATE_TABLE));
+
+            dock();
+
+            docked = true;
+        }
+
+
+        private void ClickButton(Button button)
+        {
+            if (this.InvokeRequired)
+            {
+                try
+                {
+                    Invoke(new MethodInvoker(delegate()
+                    {
+                        ClickButton(button);
+                    }));
+                }
+                catch (ObjectDisposedException e) { }
             }
+            else
+            {
+                button.PerformClick();
+            }
+        }
+
 
         private void SetText(TextBox textbox, string text)
         {
@@ -499,6 +561,11 @@ namespace CreateRemote
             port.Write(new byte[] { (byte)Commands.DriveDirect, (byte)0, (byte)0, (byte)0, (byte)0 }, 0, 5);
         }
 
+        private void dock()
+        {
+            port.Write(new byte[] { (byte)Commands.CoverandDock }, 0, 1);
+        }
+
         private void moveForward()
         {
             port.Write(new byte[] { (byte)Commands.DriveDirect, (byte)(right >> 8), (byte)right, (byte)(left >> 8), (byte)left }, 0, 5);
@@ -531,15 +598,27 @@ namespace CreateRemote
         {
             // Disable send button until finished
             // btnSend.Enabled = false;
-
+          
             // Set command list and execute all commands in background worker thread
-            commandList = Array.ConvertAll(textBoxCommand.Text.Split(','), s => short.Parse(s));
+            short[] to_trip = Array.ConvertAll(textBoxCommand.Text.Split(','), s => short.Parse(s));
+            commandList.Clear();
+            for(int i = 0; i < to_trip.Length; i++)
+            {
+                commandList.Add(DirectionCommand.getCommand(to_trip[i]));
+            }
+            for (int i = to_trip.Length - 1; i >= 0; i--)
+            {
+                commandList.Add(DirectionCommand.reverse(DirectionCommand.getCommand(to_trip[i])));
+            }
+            if (bwExecuteCommands != null && bwExecuteCommands.IsBusy)
+            {
+                bwExecuteCommands.CancelAsync();
+                Thread.Sleep(1000); // TODO: wait until cancel
+            }
             bwExecuteCommands.RunWorkerAsync();
         }
 
-
-
-        private void buttonRefresh_Click(object 2er, EventArgs e)
+        private void buttonRefresh_Click(object sender, EventArgs e)
         {
             // Clear combobox
             comboBoxCOM.Items.Clear();
@@ -680,9 +759,31 @@ namespace CreateRemote
             textBoxCommand.Text = "";
         }
 
-    }
+        private string run_python(String script)
+        {
+            Console.WriteLine("Starting python script");
+            ProcessStartInfo mProcessStartInfo = new ProcessStartInfo(python);
 
-    // Path finding class
+            mProcessStartInfo.UseShellExecute = false;
+            mProcessStartInfo.RedirectStandardOutput = true;
+
+            mProcessStartInfo.Arguments = script;
+            Process myProcess = new Process();
+            myProcess.StartInfo = mProcessStartInfo;
+            Console.WriteLine("Calling python script");
+            myProcess.Start();
+
+            StreamReader sr = myProcess.StandardOutput;
+            String stringOutput = sr.ReadLine();
+
+            myProcess.WaitForExit();
+            myProcess.Close();
+
+            return stringOutput;
+        }
+
+    }
+    
     public class Map
     {
         private Button[] btnArray;
@@ -1218,23 +1319,21 @@ namespace CreateRemote
             return new List<int>(); // no route found
         }
     }
-
-
     public class DirectionCommand
     {
         // [5][4][3]
         // [6][ ][2]
         // [7][0][1]
         public static readonly float ROOT_TWO = 1.414213562F;
-        public static readonly DirectionCommand S = new DirectionCommand("South", 0, 1, 180);
-        public static readonly DirectionCommand SE = new DirectionCommand("SouthEast", 1, ROOT_TWO, 135);
-        public static readonly DirectionCommand E = new DirectionCommand("East", 2, 1, 90);
-        public static readonly DirectionCommand NE = new DirectionCommand("NorthEast", 3, ROOT_TWO, 45);
-        public static readonly DirectionCommand N = new DirectionCommand("North", 4, 1, 0);
-        public static readonly DirectionCommand NW = new DirectionCommand("NorthWest", 5, ROOT_TWO, 315);
-        public static readonly DirectionCommand W = new DirectionCommand("West", 6, 1, 270);
-        public static readonly DirectionCommand SW = new DirectionCommand("SouthWest", 7, ROOT_TWO, 225);
-        public static readonly DirectionCommand NONE = new DirectionCommand("None", 8, 0, 0);
+        public static readonly DirectionCommand S = new DirectionCommand("S", 0, 1, 180);
+        public static readonly DirectionCommand SE = new DirectionCommand("SE", 1, ROOT_TWO, 135);
+        public static readonly DirectionCommand E = new DirectionCommand("E", 2, 1, 90);
+        public static readonly DirectionCommand NE = new DirectionCommand("NE", 3, ROOT_TWO, 45);
+        public static readonly DirectionCommand N = new DirectionCommand("N", 4, 1, 0);
+        public static readonly DirectionCommand NW = new DirectionCommand("NW", 5, ROOT_TWO, 315);
+        public static readonly DirectionCommand W = new DirectionCommand("W", 6, 1, 270);
+        public static readonly DirectionCommand SW = new DirectionCommand("S", 7, ROOT_TWO, 225);
+        public static readonly DirectionCommand NONE = new DirectionCommand("NN", 8, 0, 0);
 
         public static IEnumerable<DirectionCommand> Values
         {
@@ -1262,6 +1361,31 @@ namespace CreateRemote
                 }
             }
             return NONE;
+        }
+
+        public static DirectionCommand reverse(DirectionCommand command)
+        {
+            switch (command.Code)
+            {
+                case 0:
+                    return N;
+                case 1:
+                    return NW;
+                case 2:
+                    return W;
+                case 3:
+                    return SW;
+                case 4:
+                    return S;
+                case 5:
+                    return SE;
+                case 6:
+                    return E;
+                case 7:
+                    return NE;
+                default:
+                    return NONE;
+            }
         }
 
         private readonly String name;       // String name of direction
