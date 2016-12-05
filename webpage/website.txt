@@ -1,0 +1,31 @@
+Sandwich Maker and Delivery System
+Automatic sandwich maker and delivery robot, all through Amazon Alexa.
+
+ECE 4180 Embedded Systems Design (Fall 2016)
+Jeremy Cai -
+Kairi Kozuma - kkozuma3@gatech.edu
+Vuong Tran -
+
+Introduction
+The
+This project is a
+
+Features
+
+Code
+
+Parts (where to buy)
+1. Amazon Dot
+2. iRobot Create 2
+3. mbed LPC1768
+4. 4 x Voss Bottle
+5. 4 x SERVOS FOR INGREDIENTS
+6. 1 x SERVO FOR BREAD
+7. Wood FRAME
+
+Wiring
+connection table
+
+Gallery
+
+Videos

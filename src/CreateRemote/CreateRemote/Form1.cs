@@ -359,7 +359,7 @@ namespace CreateRemote
                     int[] destination = new int[] { -1, -1 };
                     switch (result) {
                         case "kitchen":
-                            destination = new int[] { 6, 6 };
+                            destination = new int[] { 6, 5 };
                             break;
                         case "dining":
                             destination = new int[] { 6, 2 };
@@ -391,6 +391,10 @@ namespace CreateRemote
                     {
                         commandList.Add(DirectionCommand.reverse(DirectionCommand.getCommand(to_trip[i])));
                     }
+                    commandList.Add(DirectionCommand.S);
+                    commandList.Add(DirectionCommand.S);
+                    commandList.Add(DirectionCommand.S);
+                    commandList.Add(DirectionCommand.N);
                     bwExecuteCommands.RunWorkerAsync();
                 }
                 Thread.Sleep(10000); // Wait 10 seconds
@@ -515,6 +519,8 @@ namespace CreateRemote
             SetText(textBoxReceived, "Finished");
 
             SetText(textBoxReceived, run_python(PYTHON_SCRIPT_UPDATE_TABLE, DELETE_DELIVERED));
+
+            
 
             dock();
 
