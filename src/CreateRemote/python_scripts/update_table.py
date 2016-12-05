@@ -22,6 +22,7 @@ import os
 
 # Constants for table
 STATUS_PENDING = 'pending'
+STATUS_WAITING = 'waiting'
 STATUS_DELIVERING = 'delivering'
 
 # Column names for table
@@ -77,8 +78,8 @@ def table_insert_order(customerid, timestamp, ingredients, location):
             COL_STATUS: STATUS_PENDING
         }
     )
-    print("PutItem succeeded:")
-    print(json.dumps(response, indent=4, cls=DecimalEncoder))
+    #print("PutItem succeeded:")
+    #print(json.dumps(response, indent=4, cls=DecimalEncoder))
     return response
 
 # Retrieve orders from table using customerid
@@ -90,8 +91,8 @@ def table_get_order(customerid):
             COL_CUSTOMERID: customerid
         }
     )
-    print("GetItem succeeded:")
-    print(json.dumps(response, indent=4, cls=DecimalEncoder))
+    #print("GetItem succeeded:")
+    #print(json.dumps(response, indent=4, cls=DecimalEncoder))
     return response
 
 # Retrieve orders from table using customerid
@@ -103,12 +104,12 @@ def table_delete_order(customerid):
             COL_CUSTOMERID: customerid
         }
     )
-    print("DeleteItem succeeded:")
+    # print("DeleteItem succeeded:")
     # print(json.dumps(response, indent=4, cls=DecimalEncoder))
     return response
 
 # Update order in table
-def update_order(order):
+def table_update_order(order):
     table = dynamodb.Table('Orders')
     response = table.update_item(
         Key = {
@@ -120,21 +121,31 @@ def update_order(order):
         }
     )
 
-    print("UpdateItem succeeded:")
+    # print("UpdateItem succeeded:")
     # print(json.dumps(response, indent=4, cls=DecimalEncoder))
     return response
 
+# Check if any orders are waiting to be delivered
+def get_next_order_to_deliver():
+    json_response = table_get_all_orders()
+    num_orders = json_response['Count'];
+    if (num_orders != 0):
+        for order in json_response["Items"]:
+            if order[COL_STATUS] == STATUS_WAITING:
+                return order
+    # Return false if no orders are waiting to be delivered
+    return None
 
 # Check if any orders are delivering
-def is_delivering_order():
+def get_order_delivering():
     json_response = table_get_all_orders()
     num_orders = json_response['Count'];
     if (num_orders != 0):
         for order in json_response["Items"]:
             if order[COL_STATUS] == STATUS_DELIVERING:
-                return True
-    # Return false if no orders are delivering
-    return False
+                return order
+    # Return None if no orders are delivering
+    return None
 
 # Find next order to deliver based on time and pending status
 def find_next_order(orders):
@@ -148,98 +159,26 @@ def find_next_order(orders):
     print ("Next order index: " + str(index_earliest))
     return orders[index_earliest]
 
-# Helper function to parse list of ingredients and conver to code for dispenser
-ingredients_valid = ['lettuce', 'tomatoes', 'cheese', 'onions']
-ingredient_value = {
-    'lettuce': 1,
-    'tomatoes': 2,
-    'cheese': 4,
-    'onions': 8
-}
-negative_token = ['no', 'without']
-or_operator = 'or'
+# Execute command
 
-# Parse order string
-def parse_ingredients(order_string):
+# Delete item in table with delivering status
+if (sys.argv[1] == "DeleteDelivered"):
+    order_to_delete = get_order_delivering();
+    if (order_to_delete != None):
+        table_delete_order(order_to_delete[COL_CUSTOMERID]);
+        print ("Deleted")
+        exit(0)
+    else:
+        print ("Not deleted")
+        exit(1)
 
-    # Split into words
-    token_list = order_string.split()
-
-    # List of ingredients obtained from order
-    ingredients_list = []
-
-    # Flag to skip next ingredient
-    skip_next = False
-
-    # Flag to record if previous ingredient was skipped
-    skip_prev = False
-
-    # Iterate through each word
-    for token in token_list:
-
-        # If token is a valid ingredient name
-        if (token in ingredients_valid):
-            # Keep track of previous skip value
-            skip_prev = skip_next
-
-            # If skip next flag is set, do not add to list of ingredients
-            if (skip_next):
-                skip_next = False
-            # Otherwise, add to ingredients list
-            else:
-                ingredients_list.append(token)
-
-        # If token is a negative word, skip next ingredient
-        if (token in negative_token):
-            # Skip next ingredient
-            skip_next = True
-
-        # If token is an 'or', apply same skip flag as previous ingredient
-        if (token == or_operator):
-            # Skip next ingredient
-            skip_next = skip_prev
-
-    # Calculate ingredient code to be sent to microcontroller
-    code = 0
-    for ingredient in ingredients_list:
-        code += ingredient_value[ingredient]
-
-    return code
-
-# Dispatch order by sending commands to microcontroller
-def dispatch_order(order):
-    print ("Sandwich with " + order[COL_INGREDIENTS] + " delivering to " + order[COL_LOCATION])
-    ingredient_code = parse_ingredients(order[COL_INGREDIENTS])
-    print ("Running command \"/m_sand/run " + str(ingredient_code) + "\"")
-    ser.write("/m_sand/run " + str(ingredient_code))
-
-# Send next order by dispatching order to microcontroller and updating status
-def send_next_order():
-    json_response = table_get_all_orders()
-    num_orders = json_response['Count'];
-    if (num_orders != 0):
-        print ("Found next order ...")
-        next_order = find_next_order(json_response["Items"])
-
-        # Dispatch order to dispenser
-        dispatch_order(next_order)
-
-        # Update status of order to delivering
-        next_order[COL_STATUS] = STATUS_DELIVERING
-        update_order(next_order)
-
-        # Return true if order updated successfully
-        return True
-    else: # Else, return false
-        return False
-
-# Main loop that checks for orders and executes them
-if (is_delivering_order()):
-    json_response = table_get_all_orders()
-    for order in json_response["Items"]:
-        if order[COL_STATUS] == STATUS_DELIVERING:
-            table_delete_order(order[COL_CUSTOMERID])
-            print ("Deleted")
-            exit(0)
-print ("Not deleted")
-exit(0)
+# Check for next order that is waiting to be delivered, and set to delivering status
+elif (sys.argv[1] == "CheckNextOrder"):
+    order_to_deliver = get_next_order_to_deliver();
+    if (order_to_deliver != None):
+        order_to_deliver[COL_STATUS] = STATUS_DELIVERING
+        table_update_order(order_to_deliver)
+        print (order_to_deliver[COL_LOCATION])
+        exit(0)
+    print ("NoOrdersReady")
+    exit(0)
