@@ -32,3 +32,12 @@ C:\Users\kairi\Dropbox\Academics\2016 Fall\ECE 4180\FDP\SandwichMaker\src\Create
 C:\Users\kairi\Dropbox\Academics\2016 Fall\ECE 4180\FDP\SandwichMaker\src\CreateRemote\CreateRemote\obj\Debug\CreateRemote.csproj.GenerateResource.Cache
 C:\Users\kairi\Dropbox\Academics\2016 Fall\ECE 4180\FDP\SandwichMaker\src\CreateRemote\CreateRemote\obj\Debug\CreateRemote.exe
 C:\Users\kairi\Dropbox\Academics\2016 Fall\ECE 4180\FDP\SandwichMaker\src\CreateRemote\CreateRemote\obj\Debug\CreateRemote.pdb
+C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\bin\Debug\CreateRemote.exe.config
+C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\obj\Debug\CreateRemote.exe
+C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\obj\Debug\CreateRemote.pdb
+C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\bin\Debug\CreateRemote.exe
+C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\bin\Debug\CreateRemote.pdb
+C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\obj\Debug\CreateRemote.csprojResolveAssemblyReference.cache
+C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\obj\Debug\CreateRemote.Form1.resources
+C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\obj\Debug\CreateRemote.Properties.Resources.resources
+C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\obj\Debug\CreateRemote.csproj.GenerateResource.Cache

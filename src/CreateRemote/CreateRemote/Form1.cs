@@ -51,6 +51,8 @@ namespace CreateRemote
     {
         public string python = @"C:\Python27\python.exe";
         public string PYTHON_SCRIPT_UPDATE_TABLE = ("\"" + Directory.GetCurrentDirectory() + "\\..\\..\\..\\python_scripts\\update_table.py" + "\"");
+        public string DELETE_DELIVERED = "DeleteDelivered";
+        public string CHECK_NEXT_ORDER = "CheckNextOrder";
 
         public SerialPort port;
         public Int16 left = 20; // default speed left wheel
@@ -85,6 +87,7 @@ namespace CreateRemote
         // Background workers
         private BackgroundWorker bwUpdateValues;
         private BackgroundWorker bwExecuteCommands;
+        private BackgroundWorker bwCheckNextOrder;
 
         // Serial Buffer
         public volatile byte[] buf = new byte[6];
@@ -145,6 +148,10 @@ namespace CreateRemote
             bwUpdateValues = new BackgroundWorker();
             bwUpdateValues.DoWork += new DoWorkEventHandler(backgroundWorker_updateValues);
             bwUpdateValues.RunWorkerAsync();
+
+            bwCheckNextOrder = new BackgroundWorker();
+            bwCheckNextOrder.DoWork += new DoWorkEventHandler(backgroundWorker_checkNextOrder);
+            bwCheckNextOrder.RunWorkerAsync();
 
             bwExecuteCommands = new BackgroundWorker();
             bwExecuteCommands.DoWork += new DoWorkEventHandler(backgroundWorker_move);
@@ -336,13 +343,61 @@ namespace CreateRemote
             bwExecuteCommands.RunWorkerAsync();
         }
 
-
         private void checkBoxRawSensor_CheckedChanged(object sender, EventArgs e)
         {
             raw_sensor_debug = chkboxDisplayRaw.Checked;
         }
 
-	    private void backgroundWorker_move(object sender, DoWorkEventArgs e)
+        private void backgroundWorker_checkNextOrder(object sender, DoWorkEventArgs e)
+        {
+            while (true)
+            {
+                String result = run_python(PYTHON_SCRIPT_UPDATE_TABLE, CHECK_NEXT_ORDER);
+                if (result != "NoOrdersReady")
+                {
+                    // TODO: Allow multiple destinations
+                    int[] destination = new int[] { -1, -1 };
+                    switch (result) {
+                        case "kitchen":
+                            destination = new int[] { 6, 6 };
+                            break;
+                        case "dining":
+                            destination = new int[] { 6, 2 };
+                            break;
+                        case "bedroom":
+                            destination = new int[] { 2, 6 };
+                            break;
+                        default:
+                            destination = new int[] { 6, 2 };
+                            break;
+                    }
+
+                    List<int> path = PathFinder.solve(map, destination);
+
+                    map.paintPath(path);
+                    for (int i = 0; i < path.Count; i++)
+                    {
+                        path[i] = 2 * path[i];
+                    }
+                    SetText(textBoxCommand, String.Join(",", path.ToArray()));
+
+                    short[] to_trip = Array.ConvertAll(path.ToArray(), s => (short)s);
+                    commandList.Clear();
+                    for (int i = 0; i < to_trip.Length; i++)
+                    {
+                        commandList.Add(DirectionCommand.getCommand(to_trip[i]));
+                    }
+                    for (int i = to_trip.Length - 1; i >= 0; i--)
+                    {
+                        commandList.Add(DirectionCommand.reverse(DirectionCommand.getCommand(to_trip[i])));
+                    }
+                    bwExecuteCommands.RunWorkerAsync();
+                }
+                Thread.Sleep(10000); // Wait 10 seconds
+            }
+        }
+
+        private void backgroundWorker_move(object sender, DoWorkEventArgs e)
         {
 
             for (int i = 0; i < commandList.Count; i++)
@@ -459,13 +514,12 @@ namespace CreateRemote
             // Execution finished, clear received and enable button
             SetText(textBoxReceived, "Finished");
 
-            SetText(textBoxReceived, run_python(PYTHON_SCRIPT_UPDATE_TABLE));
+            SetText(textBoxReceived, run_python(PYTHON_SCRIPT_UPDATE_TABLE, DELETE_DELIVERED));
 
             dock();
 
             docked = true;
         }
-
 
         private void ClickButton(Button button)
         {
@@ -485,7 +539,6 @@ namespace CreateRemote
                 button.PerformClick();
             }
         }
-
 
         private void SetText(TextBox textbox, string text)
         {
@@ -639,6 +692,11 @@ namespace CreateRemote
         static readonly int BUTTON_LEFT_MARGIN = 750;
         static readonly int BUTTON_TOP_MARGIN = 100;
 
+        private void btnRunPython_Click(object sender, EventArgs e)
+        {
+
+        }
+
         // Mode for path finder
         static readonly int MODE_PERPENDICULAR = 0;
         static readonly int MODE_DIAGONAL = 1;
@@ -759,15 +817,15 @@ namespace CreateRemote
             textBoxCommand.Text = "";
         }
 
-        private string run_python(String script)
+        private string run_python(String script, String args)
         {
             Console.WriteLine("Starting python script");
             ProcessStartInfo mProcessStartInfo = new ProcessStartInfo(python);
 
             mProcessStartInfo.UseShellExecute = false;
             mProcessStartInfo.RedirectStandardOutput = true;
-
-            mProcessStartInfo.Arguments = script;
+            
+            mProcessStartInfo.Arguments = string.Format("{0} {1}", script, args);
             Process myProcess = new Process();
             myProcess.StartInfo = mProcessStartInfo;
             Console.WriteLine("Calling python script");
@@ -914,6 +972,32 @@ namespace CreateRemote
         public int[] getFinishLoc()
         {
             return getLoc(BUTTON_FINISH);
+        }
+
+        // Set location of finish
+        public void setFinishLoc(int[] destination)
+        {
+            // Clear any existing finish locations
+            int row = 0;
+            int col = 0;
+            int[] loc = { -1, -1 };
+            foreach (Button btn in btnArray)
+            {
+                if (row == destination[0] && col == destination[1])
+                {
+                    btn.Text = BUTTON_FINISH;
+                }
+                else if (btn.Text.Equals(BUTTON_FINISH))
+                {
+                    btn.Text = BUTTON_OPEN;
+                }
+                col++;
+                if (col % colNum == 0)
+                {
+                    row++;
+                    col = 0;
+                }
+            }
         }
 
         // Paint the path green on the map
@@ -1148,13 +1232,18 @@ namespace CreateRemote
 
         public static List<int> solve(Map map)
         {
+            return solve(map, map.getFinishLoc());
+        }
+
+        public static List<int> solve(Map map, int[] destination)
+        {
             int n = map.getColNum(); // horizontal
             int m = map.getRowNum(); // vertical
 
             int xStart = map.getStartLoc()[0];
             int yStart = map.getStartLoc()[1];
-            int xFinish = map.getFinishLoc()[0];
-            int yFinish = map.getFinishLoc()[1];
+            int xFinish = destination[0];
+            int yFinish = destination[1];
 
             int[] int_map = map.getIntMap();
             int[] closed_nodes_map = new int[n * m];

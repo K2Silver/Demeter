@@ -668,11 +668,12 @@
             // 
             // btnRunPython
             // 
-            this.btnRunPython.Location = new System.Drawing.Point(0, 0);
+            this.btnRunPython.Location = new System.Drawing.Point(1129, 643);
             this.btnRunPython.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnRunPython.Name = "btnRunPython";
             this.btnRunPython.Size = new System.Drawing.Size(112, 35);
             this.btnRunPython.TabIndex = 0;
+            this.btnRunPython.Click += new System.EventHandler(this.btnRunPython_Click);
             // 
             // Form1
             // 

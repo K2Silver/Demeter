@@ -21,6 +21,7 @@ import re
 
 # Constants for table
 STATUS_PENDING = 'pending'
+STATUS_WAITING = 'waiting'
 STATUS_DELIVERING = 'delivering'
 
 # Column names for table
@@ -123,13 +124,13 @@ def update_order(order):
     return response
 
 
-# Check if any orders are delivering
+# Check if any orders are delivering or waiting
 def is_delivering_order():
     json_response = table_get_all_orders()
     num_orders = json_response['Count'];
     if (num_orders != 0):
         for order in json_response["Items"]:
-            if order[COL_STATUS] == STATUS_DELIVERING:
+            if order[COL_STATUS] == STATUS_DELIVERING or order[COL_STATUS] == STATUS_WAITING:
                 return True
     # Return false if no orders are delivering
     return False
@@ -210,6 +211,13 @@ def dispatch_order(order):
     ingredient_code = parse_ingredients(order[COL_INGREDIENTS])
     print ("Running command \"/m_sand/run " + str(ingredient_code) + "\"")
     ser.write("/m_sand/run " + str(ingredient_code))
+    response = ser.readline()
+    print (response) # Wait until mbed resopnds that sandwich is made
+    while ("Made sandwich" not in response):
+        response += ser.readline()
+        time.sleep(1)
+        print (response)
+    print ("Done making sandwich")
 
 # Send next order by dispatching order to microcontroller and updating status
 def send_next_order():
@@ -223,7 +231,7 @@ def send_next_order():
         dispatch_order(next_order)
 
         # Update status of order to delivering
-        next_order[COL_STATUS] = STATUS_DELIVERING
+        next_order[COL_STATUS] = STATUS_WAITING
         update_order(next_order)
 
         # Return true if order updated successfully
