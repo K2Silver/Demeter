@@ -49,21 +49,20 @@ namespace CreateRemote
 
     public partial class Form1 : Form
     {
-        public string python = @"C:\Python27\python.exe";
-        public string PYTHON_SCRIPT_UPDATE_TABLE = ("\"" + Directory.GetCurrentDirectory() + "\\..\\..\\..\\python_scripts\\update_table.py" + "\"");
-        public string DELETE_DELIVERED = "DeleteDelivered";
-        public string CHECK_NEXT_ORDER = "CheckNextOrder";
+        public readonly String PYTHON = @"C:\Python27\python.exe";
+        public readonly String PYTHON_SCRIPT_UPDATE_TABLE = ("\"" + Directory.GetCurrentDirectory() + "\\..\\..\\..\\python_scripts\\update_table.py" + "\"");
+        public readonly String DELETE_DELIVERED = "DeleteDelivered";
+        public readonly String CHECK_NEXT_ORDER = "CheckNextOrder";
 
         public SerialPort port;
         public Int16 left = 20; // default speed left wheel
         public Int16 right = 20; // default speed right wheel
         private bool ProcessingSensorDataPacket = false;
         public bool raw_sensor_debug = false;
-        // public volatile ushort travelDistance = 10;
 
         // Constants
         public volatile short d45 = 92; // turning distance for 45 degrees when both wheels are turning
-        public static readonly short d_block = 300;
+        public static readonly short d_block = 250; // Block size for map grid in mm
 
         // variables for control system
         public volatile short new_l, old_l, l, base_l, new_r, old_r, r, base_r;
@@ -95,13 +94,15 @@ namespace CreateRemote
         public Form1()
         {
             InitializeComponent();
-            // Update combobox on startup
+
+            // Update combobox on startup (list of serial ports available)
             String[] comPortList = SerialPort.GetPortNames();
             foreach (String comPort in comPortList)
             {
                 comboBoxCOM.Items.Add(comPort);
             }
 
+            // Set to highest COM port by default
             if (comPortList.Length == 0)
             {
                 comboBoxCOM.Text = "COM1";
@@ -139,26 +140,31 @@ namespace CreateRemote
             (byte)Sensors.RightEncoderCounts}, 0, 4);
             Thread.Sleep(200);
             
-            // Attaching two handlers because it works better for some reason
+            // Attaching two handlers for better response time
             port.DataReceived += new
             SerialDataReceivedEventHandler(port_DataReceived);
             port.DataReceived += new
             SerialDataReceivedEventHandler(port_DataReceived);
 
+            // Launch background worker to update encoder values and do angle/distance calculation
             bwUpdateValues = new BackgroundWorker();
             bwUpdateValues.DoWork += new DoWorkEventHandler(backgroundWorker_updateValues);
             bwUpdateValues.RunWorkerAsync();
 
+            // Launch background worker to check for new orders
             bwCheckNextOrder = new BackgroundWorker();
             bwCheckNextOrder.DoWork += new DoWorkEventHandler(backgroundWorker_checkNextOrder);
             bwCheckNextOrder.RunWorkerAsync();
 
+            // Initialize, but not launch a background worker to handle direction commands
             bwExecuteCommands = new BackgroundWorker();
             bwExecuteCommands.DoWork += new DoWorkEventHandler(backgroundWorker_move);
             bwExecuteCommands.WorkerSupportsCancellation = true;
 
+            // Disable start
             btnStart.Enabled = false;
 
+            // Initialize list of direction commands
             commandList = new List<DirectionCommand>();
         }
         // Stop Button - turn off drive motors
@@ -241,24 +247,10 @@ namespace CreateRemote
                     // Distance Data Read
                     // align with sensor packet header value and read in data
                     while (port.ReadByte() != 19) { }
-                    //byte[] buf = new byte[port.ReadByte()];
-                    //port.Read(buf, 0, buf.Length);
 
                     port.ReadByte(); // skip first byte
                     port.Read(buf, 0, 6);
-
-
-                    // grab final checksum, validate checksum, and update sensor data
-                    //if (validData(buf, (byte)(port.ReadByte() + (buf.Length + 19))))
-                    //{ // Display raw sensor data on console for debug?
-                    //    //if (raw_sensor_debug)
-                    //    //{
-                    //    //    foreach (byte b in buf) Console.Write(b + " ");
-                    //    //    Console.WriteLine();
-                    //    //};
-
-                    //     //System.Diagnostics.Debug.WriteLine("Received data: " + travelDistance);
-                    //}
+                    
                 }
                 catch (TimeoutException)
                 {
@@ -343,19 +335,23 @@ namespace CreateRemote
             bwExecuteCommands.RunWorkerAsync();
         }
 
+        // Display raw sensor value or not
         private void checkBoxRawSensor_CheckedChanged(object sender, EventArgs e)
         {
             raw_sensor_debug = chkboxDisplayRaw.Checked;
         }
 
+        // Background worker code for checking next order
         private void backgroundWorker_checkNextOrder(object sender, DoWorkEventArgs e)
         {
             while (true)
             {
+                // Use python script to get next destination
                 String result = run_python(PYTHON_SCRIPT_UPDATE_TABLE, CHECK_NEXT_ORDER);
+
+                // If destinatino is not "NoOrdersReady", find destination and get new command
                 if (result != "NoOrdersReady")
                 {
-                    // TODO: Allow multiple destinations
                     int[] destination = new int[] { -1, -1 };
                     switch (result) {
                         case "kitchen":
@@ -372,15 +368,31 @@ namespace CreateRemote
                             break;
                     }
 
+                    // Solve path based on map and destination
                     List<int> path = PathFinder.solve(map, destination);
 
+                    // Paint path to destinatino
                     map.paintPath(path);
+
+                    // Multiply by 2, necessary since only using orthogonal movements
+                    // Original Values
+                    // [ ][2][ ]
+                    // [3][ ][1]
+                    // [ ][0][ ]
+                    //
+                    // Need values in this fashion
+                    // [5][4][3]
+                    // [6][ ][2]
+                    // [7][0][1]
                     for (int i = 0; i < path.Count; i++)
                     {
                         path[i] = 2 * path[i];
                     }
+
+                    // Set command box to show path
                     SetText(textBoxCommand, String.Join(",", path.ToArray()));
 
+                    // Add path and return path to command list
                     short[] to_trip = Array.ConvertAll(path.ToArray(), s => (short)s);
                     commandList.Clear();
                     for (int i = 0; i < to_trip.Length; i++)
@@ -391,21 +403,27 @@ namespace CreateRemote
                     {
                         commandList.Add(DirectionCommand.reverse(DirectionCommand.getCommand(to_trip[i])));
                     }
+
+                    // Move South 3 and North 1 before docking
                     commandList.Add(DirectionCommand.S);
                     commandList.Add(DirectionCommand.S);
                     commandList.Add(DirectionCommand.S);
                     commandList.Add(DirectionCommand.N);
+
+                    // Launch thread
                     bwExecuteCommands.RunWorkerAsync();
                 }
                 Thread.Sleep(10000); // Wait 10 seconds
             }
         }
 
+        // Background worker to handle moving
         private void backgroundWorker_move(object sender, DoWorkEventArgs e)
         {
-
+            // Iterate through each command
             for (int i = 0; i < commandList.Count; i++)
             {
+                // Get next command in list
                 DirectionCommand command = commandList[i];
                 // Range check
                 if ((command.Code > 7) || (command.Code < 0))
@@ -431,26 +449,31 @@ namespace CreateRemote
                     sb.Append(",");
                 }
                 SetText(textBoxReceived, sb.ToString());
+
+                // Set current command, distance to go, and angle
                 currentCommand = command;
-                executingCommand = true;
                 new_distance = (short)(d_block * currentCommand.Multiplier);
                 new_angle = (short) currentCommand.Angle;
 
+                // Set executing command to true
+                executingCommand = true;
                 move_turn = true;
                 move_forward = true;
 
                 // Loop until execution of command finished
                 while (executingCommand)
                 {
+                    // Code to move back from dock
                     if (docked)
                     {
-                        // TODO: temporary fix for bug of docking after moving backwards
+                        // Move back 50mm
                         temp_l = l;
                         while (temp_l - 50 < l)
                         {
                             moveBackward();
                         }
 
+                        // Cancel demo mode, since it starts automatically if undocked
                         port.Write(new byte[] { (byte)Commands.Demo, (byte)(255) }, 0, 1);
                         port.Write(new byte[] { (byte)Commands.Start, (byte)Commands.SafeMode }, 0, 2);
                         Thread.Sleep(100);
@@ -458,51 +481,52 @@ namespace CreateRemote
                         port.Write(new byte[] { (byte)Commands.Stream, 2, (byte)Sensors.LeftEncoderCounts,
                              (byte)Sensors.RightEncoderCounts}, 0, 4);
                         Thread.Sleep(200);
-                        //stop();
-                        //System.Diagnostics.Stopwatch s = new System.Diagnostics.Stopwatch();
-                        //s.Start();
-                        //while (s.Elapsed < TimeSpan.FromSeconds(2))
-                        //{
-                        //    ClickButton(btnReverse);
 
-                        //}
-
+                        // Set flag to false
                         docked = false;
                     }
+                    // Currently turning to correct angle
                     else if (move_turn)
                     {
                         // Calculate value to determine which way to turn
                         short turnval = mod((short)(angle - new_angle - 180), 360);
+
+                        // Display value for debugging
                         SetText(textBoxAngleCalc, turnval.ToString());
 
-                        if (turnval <= 181 && turnval >= 179) 
+                        // If value is between 178 and 182, stop turning
+                        if (turnval <= 182 && turnval >= 178) 
                         {
                             move_turn = false;
                             temp_l = l;
                         }
-                        else if (turnval < 179)
+                        // Else, if less than 178, turn right
+                        else if (turnval < 178)
                         {
                             turnRight();
                         }
-                        else if (turnval > 181)
+                        // Else, if greater than 182, turn left
+                        else if (turnval > 182)
                         {
                             turnLeft();
                         }
                     }
-
+                    // Currently moving forward
                     else if (move_forward)
                     {
+                        // Move forward until l variable becomes greater than old l and new distance
                         if ((temp_l + new_distance)  > l)
                         {
                             moveForward();
                         }
+                        // Otherwise, stop
                         else if ((temp_l + new_distance) <= l)
                         {
                             stop();
                             move_forward = false;
                             executingCommand = false;
                         }
-                        else // TODO: doesn't seem to reach 200
+                        else
                         {
                         }
                     }
@@ -515,37 +539,15 @@ namespace CreateRemote
                 }
             }
 
-            // Execution finished, clear received and enable button
-            SetText(textBoxReceived, "Finished");
-
+            // Execution finished, delete delivered item from table with Python script
             SetText(textBoxReceived, run_python(PYTHON_SCRIPT_UPDATE_TABLE, DELETE_DELIVERED));
 
-            
-
+            // Attempt to dock
             dock();
-
             docked = true;
         }
 
-        private void ClickButton(Button button)
-        {
-            if (this.InvokeRequired)
-            {
-                try
-                {
-                    Invoke(new MethodInvoker(delegate()
-                    {
-                        ClickButton(button);
-                    }));
-                }
-                catch (ObjectDisposedException e) { }
-            }
-            else
-            {
-                button.PerformClick();
-            }
-        }
-
+        // Helper method to set text from background worker
         private void SetText(TextBox textbox, string text)
         {
             if (this.InvokeRequired)
@@ -565,6 +567,7 @@ namespace CreateRemote
             }
         }
 
+        // Background worker to update values
         private void backgroundWorker_updateValues(object sender, DoWorkEventArgs e)
         {
             while (true)
@@ -600,11 +603,12 @@ namespace CreateRemote
                 SetText(textBoxTurningDistance,(lr_difference).ToString());
                 SetText(textBoxTempL,"" + temp_l);
 
-                Thread.Sleep(0);
+                Thread.Sleep(0); // Pass to another thread
             }
 
         }
 
+        // Functions for robot movement
         private void turnRight()
         {
             port.Write(new byte[] { (byte)Commands.DriveDirect, (byte)(-right >> 8), (byte)-right, (byte)(left >> 8), (byte)left }, 0, 5);
@@ -635,12 +639,14 @@ namespace CreateRemote
             port.Write(new byte[] { (byte)Commands.DriveDirect, (byte)(-right >> 8), (byte)-right, (byte)(-left >> 8), (byte)-left }, 0, 5);
         }
 
+        // Helper function to compute the angle based on encoder values
         private void computeAngle() {
             lr_difference = (short)(l - r);
             angle = mod((short)(((((lr_difference) / 2.0) / d45) * 45.0)), (short)360);  // this angle relative to left wheel motion
 
         }
 
+        // Modulus function, since C# modulus does a remainder
         private short mod(short x, short m)
         {
             return (short) ((x % m + m) % m);
@@ -652,11 +658,9 @@ namespace CreateRemote
 
         }
 
-        // Command Send Button
+        // Send commands with button click
         private void buttonSend_Click(object sender, EventArgs e)
         {
-            // Disable send button until finished
-            // btnSend.Enabled = false;
           
             // Set command list and execute all commands in background worker thread
             short[] to_trip = Array.ConvertAll(textBoxCommand.Text.Split(','), s => short.Parse(s));
@@ -677,6 +681,7 @@ namespace CreateRemote
             bwExecuteCommands.RunWorkerAsync();
         }
 
+        // Refresh list of COM Ports 
         private void buttonRefresh_Click(object sender, EventArgs e)
         {
             // Clear combobox
@@ -697,16 +702,6 @@ namespace CreateRemote
         static readonly int BUTTON_SIZE = 20;
         static readonly int BUTTON_LEFT_MARGIN = 750;
         static readonly int BUTTON_TOP_MARGIN = 100;
-
-        private void btnRunPython_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        // Mode for path finder
-        static readonly int MODE_PERPENDICULAR = 0;
-        static readonly int MODE_DIAGONAL = 1;
-        static readonly int MODE = MODE_PERPENDICULAR;
 
         // Add buttons to form
         private void showMap(Map map)
@@ -826,7 +821,7 @@ namespace CreateRemote
         private string run_python(String script, String args)
         {
             Console.WriteLine("Starting python script");
-            ProcessStartInfo mProcessStartInfo = new ProcessStartInfo(python);
+            ProcessStartInfo mProcessStartInfo = new ProcessStartInfo(PYTHON);
 
             mProcessStartInfo.UseShellExecute = false;
             mProcessStartInfo.RedirectStandardOutput = true;
@@ -848,6 +843,7 @@ namespace CreateRemote
 
     }
     
+    // Map class that has matrix of buttons to represent room
     public class Map
     {
         private Button[] btnArray;
@@ -1070,6 +1066,7 @@ namespace CreateRemote
             }
         }
 
+        // Clear path
         public void clearPath()
         {
             foreach (Button btn in btnArray)
@@ -1173,16 +1170,20 @@ namespace CreateRemote
 
 
     }
+
+    // Class to find the shortest path to a destination, using A* method
     public class PathFinder
     {
         //static int dir = 8;
         //static int[] dx = { 1, 1, 0, -1, -1, -1, 0, 1 };
         //static int[] dy = { 0, 1, 1, 1, 0, -1, -1, -1 };
 
+        // Use orthogonal directions only
         static int dir = 4;
         static int[] dx = { 1, 0, -1, 0 };
         static int[] dy = { 0, 1, 0, -1 };
 
+        // Inner class to represent a location node
         private class Node
         {
             // current position
@@ -1236,11 +1237,13 @@ namespace CreateRemote
             }
         }
 
+        // Solve map using destination marked with button
         public static List<int> solve(Map map)
         {
             return solve(map, map.getFinishLoc());
         }
 
+        // Solve map using destination passed as argument
         public static List<int> solve(Map map, int[] destination)
         {
             int n = map.getColNum(); // horizontal
@@ -1414,6 +1417,8 @@ namespace CreateRemote
             return new List<int>(); // no route found
         }
     }
+
+    // Class of directions, with multiplier for distance and angle
     public class DirectionCommand
     {
         // [5][4][3]
@@ -1446,6 +1451,7 @@ namespace CreateRemote
             }
         }
 
+        // Get the command object corresponding to the code
         public static DirectionCommand getCommand(short code)
         {
             foreach (DirectionCommand dc in DirectionCommand.Values)
@@ -1458,6 +1464,7 @@ namespace CreateRemote
             return NONE;
         }
 
+        // Find the reverse command
         public static DirectionCommand reverse(DirectionCommand command)
         {
             switch (command.Code)
