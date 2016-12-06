@@ -12,7 +12,14 @@ This project is an automatic sandwich maker and delivery robot.
 TODO: MORE INTRODUCTION INFO
 
 ## Features
-TODO: FEATURES HERE
+
+* Use voice to order sandwiches via Alexa
+* Cancellation and status checking of orders via Alexa
+* Sandwich maker to automatically dispense bread and ingredients
+* Delivery robot to deliver sandwich to destination given via Alexa
+* Return of delivery robot to sandwich dispenser
+* Synchronization of data between Alexa interaction, sandwich dispenser, and delivery robot
+
 
 ## Parts
 1. [Amazon Dot](https://www.amazon.com/All-New-Amazon-Echo-Dot-Add-Alexa-To-Any-Room/dp/B01DFKC2SO)
@@ -34,7 +41,7 @@ Installation has the following major steps:
 
 1. [Alexa Skill Setup](#amazon_skill_setup)
 2. [Sandwich Maker Mbed and Server Code](#sandwich_maker_server)
-3. Roomba iCreate 2 C# Application Setup
+3. [Roomba Create 2 C# Application](#roomba_create_robot)
 
 ## 1. <a name="amazon_skill_setup"></a>Amazon Skill Setup
 
@@ -254,11 +261,11 @@ The following steps detail how to create the Amazon Alexa SandwichMaker skill. T
 
 ## <a name="sandwich_maker_server"></a>Sandwich Maker Mbed and Server Code
 
-TODO: Short intro
+The mbed is used to move the servos to dispense the ingredients and bread. Mechanisms to dispense are TODO EXPLAIN. The mbed code responds to commands through RPC, sent via the USB virtual COM port. Another computer will run the python script to check the DynamoDB database and send the appropriate commands to the mbed.
 
 ### 2.1 Wiring Tables
 
-TODO: Explain wiring and building?
+TODO: Explain wiring and building the thing?
 
 #### Wiring for Mbed and Servos
 | mbed Pin |Servo        |
@@ -290,7 +297,7 @@ TODO: Explain wiring and building?
 
 1. Mbed Code Download
 	
-	The mbed code can be imported to the compiler [here](https://developer.mbed.org/users/K2Silver/code/SandwichMaker/). Alternatively, the binary file is available in the `/bin/SandwichMaker_LPC1768.bin`.
+	The mbed code can be imported to the compiler [here](https://developer.mbed.org/users/K2Silver/code/SandwichMaker/). Alternatively, the binary file is available at `/bin/SandwichMaker_LPC1768.bin`.
 
 2. Test RPC Call
 	To test RPC calls, first connect to the mbed using a USB cable. Use a serial program like RealTerm and open the virtual COM port connection with a baud rate of 9600. Send `/m_sand/run [integer]` through the serial connection, replacing `[integer]` with a number from 0 to 15. The number represents which ingredient to dispense.
@@ -302,7 +309,7 @@ TODO: Explain wiring and building?
 	/*  Bit 3 -> Ingredient 0 needed (1) or not (0) */
 	```
 
-3. Mbed Code Walkthrough 
+3. Mbed Code Walkthrough (Optional Reading)
 
 	This section explains the mbed code in more detail.
 	
@@ -422,9 +429,21 @@ TODO: Explain wiring and building?
 	```
 
 #### 2.3 Sandwich Maker Server
-1. Configure DynamoDB Key and Password
 
-	To connect to the DynamoDB server hosted on Amazon, the key, passphrase, and region are all necessary. The source code includes a `config_template.json` file with the following code:
+The source code for the sandwich maker server is locaterd in `/src/sandwich_maker`. Clone or download the repository to access the files.
+
+1. Install Python libraries
+	
+	The sandwich maker server is written in Python and requires certain libraries.
+	
+	* `boto3` library: install with `pip install boto3`
+		- Used to authenticate and access DynamoDB hosted on Amazon
+	* `pyserial` library: install with `pip install pyserial`
+		- Used to send serial RPC commands to the mbed
+
+2. Configure DynamoDB Key and Password
+
+	To connect to the DynamoDB server hosted on Amazon, the key, passphrase, and region are all necessary. The source code in `/src/sandwich_maker` includes a `config_template.json` file with the following code:
 	
 	```
 	{
@@ -436,7 +455,7 @@ TODO: Explain wiring and building?
 	
 	Replace `YOUR_AWS_KEY_HERE` and `YOUR_AWS_PASS_HERE` with the IAM access key ID and secret password copied from the DynamoDB user setup section. More information can be obtained from the [IAM console](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html). Use `us-east-1` for `YOUR_REGION_HERE` (since Amazon Alexa seems to only support this region reliably). Then, rename the `config_template.json` to `config.json`. This file will be used the python code to authenticate itself to the DynamoDB database.
 
-2. Python Sandwich Maker Server Walkthrough
+2. Python Sandwich Maker Server Walkthrough (Optional Reading)
 
 	The code for the sandwich maker server (which issues commands to the mbed via RPC) is written in Python. The server code relies heavily on `boto3` library, which allows API calls to the Amazon DynamoDB database.
 	
@@ -567,11 +586,46 @@ TODO: Explain wiring and building?
 	    sys.exit(0)
 	```
 
-### Sandwich Delivery Robot
-TODO: Post C# Code examples
+##  3. <a name="roomba_create_robot"></a>Roomba Create 2 C# Application
+
+The delivery robot used for the project was the Roomba Create 2. A computer was mounted on the robot to communicate with the online DynamoDB and send commands to the robot. The following section describes the setup process for running the C# application that manages those actions. Clone or download the `/src/DeliveryRobot` directory.
+
+### 3.1 Python Setup
+
+1. The C# application relies on python scripts to access the DynamoDB database. This is to simplify the C# application, since it will not have to import the AWS SDK. However, certain Python libraries must be installed.
+	
+	* `boto3` library: install with `pip install boto3`
+		- Used to authenticate and access DynamoDB hosted on Amazon
+	* `pyserial` library: install with `pip install pyserial`
+		- Used to send serial commands to the Create 2 robot
+
+	**Note that these commands require `pip` to be installed. Check [here](https://pip.pypa.io/en/stable/installing/) for more information regarding pip.**
+
+2. Configure DynamoDB Key and Password
+
+	To connect to the DynamoDB server hosted on Amazon, the key, passphrase, and region are all necessary. The source code in `/src/DeliveryRobot` includes a `config_template.json` file with the following code:
+	
+	```
+	{
+	  "AWS_KEY":"YOUR_AWS_KEY_HERE",
+	  "AWS_PASS":"YOUR_AWS_PASS_HERE",
+	  "DYNAMODB_REGION":"YOUR_REGION_HERE"
+	}
+	```
+	
+	Replace `YOUR_AWS_KEY_HERE` and `YOUR_AWS_PASS_HERE` with the IAM access key ID and secret password copied from the DynamoDB user setup section. More information can be obtained from the [IAM console](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html). Use `us-east-1` for `YOUR_REGION_HERE` (since Amazon Alexa seems to only support this region reliably). Then, rename the `config_template.json` to `config.json`. This file will be used the python code to authenticate itself to the DynamoDB database.
+
+### 3.1 C# Application Setup
+
 1. Communicating with iRobot Create 2
-2. Delivery of C# GUI Application
-3. Python Script Setup
+
+
+# Running the Program
+
+## 1. Run Mbed Code
+## 2. Run Python Sandwich Maker Servo
+## 3. Start Robot Application
+TODO: Diagram showing the interaction methods.
 
 ## Gallery
 TODO: Post gallery

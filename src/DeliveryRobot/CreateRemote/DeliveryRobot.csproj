@@ -7,8 +7,8 @@
     <ProjectGuid>{2FB4869A-AC12-448C-8ECC-6A0C9F172424}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CreateRemote</RootNamespace>
-    <AssemblyName>CreateRemote</AssemblyName>
+    <RootNamespace>DeliveryRobot</RootNamespace>
+    <AssemblyName>DeliveryRobot</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -63,6 +63,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="ClassDiagram1.cd" />
     <None Include="Properties\Settings.settings">

@@ -41,3 +41,5 @@ C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichM
 C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\obj\Debug\CreateRemote.Form1.resources
 C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\obj\Debug\CreateRemote.Properties.Resources.resources
 C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\obj\Debug\CreateRemote.csproj.GenerateResource.Cache
+C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\CreateRemote\CreateRemote\bin\Debug\DeliveryRobot.exe.config
+C:\Users\kairi\Dropbox\Academics\2016_Fall\ECE_4180\FinalDesignProject\SandwichMaker\src\DeliveryRobot\CreateRemote\bin\Debug\DeliveryRobot.exe.config
