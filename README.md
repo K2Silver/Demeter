@@ -1,16 +1,17 @@
 # Sandwich Maker and Delivery System
 Automatic sandwich maker and delivery robot, all through Amazon Alexa.
 
-#### ECE 4180 Embedded Systems Design (Fall 2016)
+**ECE 4180 Embedded Systems Design (Fall 2016)**
+
 * Jeremy Cai - TODO: EMAIL HERE
 * Kairi Kozuma - kkozuma3@gatech.edu
-* Vuong Tran - TODOO: EMAIL HERE
+* Vuong Tran - TODO: EMAIL HERE
 
 ## Introduction
 This project is an automatic sandwich maker and delivery robot.
 TODO: MORE INTRODUCTION INFO
 
-### Features
+## Features
 TODO: FEATURES HERE
 
 ## Parts
@@ -27,21 +28,22 @@ TODO: FEATURES HERE
 
 * Make sure that the ground of the servo and mbed are connected.
 
-## Installation Instructions
+# Installation Instructions
 
-Installation has three major steps:
-1. Alexa Skill Setup
-2. Sandwich Maker Servo and Server Code
+Installation has the following major steps:
+
+1. [Alexa Skill Setup](#amazon_skill_setup)
+2. [Sandwich Maker Mbed and Server Code](#sandwich_maker_server)
 3. Roomba iCreate 2 C# Application Setup
 
-### 1. Amazon Skill Setup
+## 1. <a name="amazon_skill_setup"></a>Amazon Skill Setup
 
 To take sandwich orders using the Amazon Dot, a custom Alexa Skill is necessary. The skill defines the invocation phrase, interaction methods, and the arguments passed. This project uses three different Amazon services to take and manage orders.
 
-* Note that you will need an [Amazon Developer](https://developer.amazon.com/) account to access these services.
+* Note that you will need an [Amazon Developer Account](https://developer.amazon.com/) to access these services.
 
-#### 1.1 Amazon DynamoDB
-To store and synchronize data between the Amazon Dot, sandwich maker, and delivery robot, and DynamoDB database will be used. Amazon DynamoDB is a NoSQL Cloud Distributed Database service.
+### 1.1 Amazon DynamoDB
+To store and synchronize sandwich order data between the Amazon Dot (Alexa Skill), sandwich maker, and delivery robot, and DynamoDB database will be used. Amazon DynamoDB is a NoSQL Cloud Distributed Database service.
 
 1. Access the [DynamoDB Portal](https://console.aws.amazon.com/dynamodb/home?region=us-east-1#) and click "Create Table".
 
@@ -51,11 +53,32 @@ To store and synchronize data between the Amazon Dot, sandwich maker, and delive
 
 	![DynamoDB Scheme](images/tutorial/dynamodb_scheme.png)
 
-3. To enable access to the database from the lambda 
-4. TODO: ROLES AND PERMISSIONS
+3. To enable access to the database from the lambda function (which will be implemented later), it is necessary to create a user. A user provides an ID and password to access certain resources.
+
+	Go to the [IAM Console](https://console.aws.amazon.com/iam/home#/home) and click on the "Users" tab to the left. Click "Add user" to create a new user.
+	
+	![DynamoDB Add User](images/tutorial/dynamodb_user_create.png)
+	
+	Fill out the "User name" as shown and select "Programmatic access" for Access type. Then click "Next".
+	
+	![DynamoDB User Details](images/tutorial/dynamodb_user_details.png)
+	
+	Select "Attach existing policies directly" and search for "dynamodb" in the search box. Select "AmazonDynamoDBFullAccess" and "AmazonDynamoDBFullAccesswithDataPipeline". This will allow the lambda function to read and write from the database. Click "Next".
+	
+	![DynamoDB Permissions](images/tutorial/dynamodb_user_permissions.png)
+
+	Review user details and click "Create user".
+	
+	![DynamoDB Review](images/tutorial/dynamodb_user_review.png)
+	
+	After creating the user, the following is displayed. Copy down the "Access key ID" and "Secret access key". 
+	
+	![DynamoDB ID and Key](images/tutorial/dynamodb_user_key_pass.png)
+	
+	**This is the only time these credentials are shown.**
 
 ### 1.2 Amazon Lambda Response
-Before creating the Alexa skill, a lambda response function must be created. The Alexa skill to be created later will send JSON information the a lambda (which is a function that handles the requests).
+A lambda function will be used to insert and delete orders from the database. This function handles data passed from the Alexa Skill. The Alexa skill to be created later will send JSON information to the lambda.
 
 1. Access the [Lambda Function Site](https://console.aws.amazon.com/lambda/home?region=us-east-1) from the Amazon Developer portal.
 
@@ -81,28 +104,28 @@ Before creating the Alexa skill, a lambda response function must be created. The
 6. Choose a role for the Lambda function. This defines the permissions that the function has (the resources it can access within Amazon). Select "Create a custom role".
 
 	![Lambda Role](images/tutorial/lambda_role.png)
-	
+
     A new window should open. This is the IAM console, which allows you to define new roles (with new permissions). Select "Create a new Role Policy" for the Policy Name and click the "Allow" button.
-    
+
     ![Create Lambda](images/tutorial/lambda_create_role.png)
-   
+
 7. Review function details and confirm by clicking "Create function".
-	
+
     ![Create Lambda Confirm](images/tutorial/lambda_create_function_confirm.png)
-    
+
     The function should now appear in the list of functions (accessed from the "Functions" button on the left side).
-    
+
     ![Lambda List](images/tutorial/lambda_create_function_list.png)
-    
+
 8. Click on the new function and record the ARN on the top right. This is necessary for the Alexa Skill to forward the data to the lambda function.
 
 	![Lambda ARN](images/tutorial/lambda_arn.png)
-    
+
 9. To access the database from the lambda function, change the access id key and password in the lambda function using the online code editor.
 
 	![Lambda Key and Pass](images/tutorial/lambda_key_pass.png)
 
-#### 1.3 Alexa Skill
+### 1.3 Alexa Skill
 
 The following steps detail how to create the Amazon Alexa SandwichMaker skill. This will handle invocation of the skill and interaction methods with the voice user interface. The skill will pass data to the lambda function.
 
@@ -110,104 +133,109 @@ The following steps detail how to create the Amazon Alexa SandwichMaker skill. T
 
 	![Alexa Skills Kit](images/tutorial/alexa_skills_kit.png)
     ---
-    
+
     ![Alexa Create Skill](images/tutorial/alexa_create_skill.png)
 
 2. Fill in the information for the new Alexa skill as shown. Click "Next".
 
 	![Alexa Skill Info](images/tutorial/alexa_skill_info.png)
-    
+
 3. Copy and paste the intent schema below into the textbox for schema in the interaction model step.
 	* Intents: types of interaction the skill can handle.
+	
+	**Intent Schema**
+	
+	```
+	{
+	  "intents": [
+	    {
+	      "intent": "OrderIntent",
+	       "slots": [
+	        {
+	          "name": "OrderText",
+	          "type": "ORDER_TEXT"
+	        },
+	        {
+	          "name": "Location",
+	          "type": "LOCATION"
+	        }
+	      	]
+	    },
+	    {
+	      "intent": "CheckOrderIntent"
+	    },
+	    {
+	      "intent": "AMAZON.HelpIntent"
+	    },
+	    {
+	      "intent": "AMAZON.CancelIntent"
+	    },
+	    {
+	      "intent": "AMAZON.NoIntent"
+	    },
+	    {
+	      "intent": "AMAZON.YesIntent"
+	    },
+	    {
+	      "intent": "AMAZON.StartOverIntent"
+	    },
+	    {
+	      "intent": "AMAZON.StopIntent"
+	    }
+	  ]
+	}
+	```
 
-##### Intent Schema
-```
-{
-  "intents": [
-    {
-      "intent": "OrderIntent",
-       "slots": [
-        {
-          "name": "OrderText",
-          "type": "ORDER_TEXT"
-        },
-        {
-          "name": "Location",
-          "type": "LOCATION"
-        }
-      	]
-    },
-    {
-      "intent": "CheckOrderIntent"
-    },
-    {
-      "intent": "AMAZON.HelpIntent"
-    },
-    {
-      "intent": "AMAZON.CancelIntent"
-    },
-    {
-      "intent": "AMAZON.NoIntent"
-    },
-    {
-      "intent": "AMAZON.YesIntent"
-    },
-    {
-      "intent": "AMAZON.StartOverIntent"
-    },
-    {
-      "intent": "AMAZON.StopIntent"
-    }
-  ]
-}
-```
+	**Custom Slot Types**
 
-##### Custom Slot Types
-Since custom slot types are used, allowable values must be declared. Copy and paste the following values for the two slot types defined in the intent sche
+	Since custom slot types are used, allowable values must be declared. Copy and paste the following 	values for the two slot types defined in the intent sche
 
-* Slots: arguments that are passed with intents.
+	* Slots: arguments that are passed with intents.
+	
+	For LOCATION:
+	
+	```
+	office
+	kitchen
+	bedroom
+	dining room
+	```
+	
+	For ORDER_TEXT:
+	
+	```
+	lettuce
+	tomatoes
+	cheese
+	onions
+	```
+	
+	After inputting the intent schema and custom slot types, the page should appear like the one shown 	below.
 
-For LOCATION:
+	![Schema and Slot](images/tutorial/alexa_interaction_model.png)
 
-```
-office
-kitchen
-bedroom
-dining room
-```
+	**Sample Utterances**
 
-For ORDER_TEXT:
-
-```
-lettuce
-tomatoes
-cheese
-onions
-```
-After inputting the intent schema and custom slot types, the page should appear like the one shown below.
-
-![Schema and Slot](images/tutorial/alexa_interaction_model.png)
-
-##### Sample Utterances
-Sample utterances are ways to invoke the intents and pass arguments into slots as arguments. The format is `[INTENT] [some phrase {some slot type} more words {some slot type}]`.
-The sample utterances used for the sandwich maker is shown below. Copy and paste the utterances into the textbox for utterances.
-```
-OrderIntent make a sandwich with {OrderText} delivered to {Location}
-OrderIntent make a sandwich with {OrderText} and {OrderText} delivered to {Location}
-OrderIntent make a sandwich with {OrderText} {OrderText} and {OrderText} delivered to {Location}
-OrderIntent make a sandwich with {OrderText} {OrderText} {OrderText} and {OrderText} delivered to {Location}
-OrderIntent make me a sandwich with {OrderText} delivered to {Location}
-OrderIntent make me a sandwich with {OrderText} and {OrderText} delivered to {Location}
-OrderIntent make me a sandwich with {OrderText} {OrderText} and {OrderText} delivered to {Location}
-OrderIntent make me a sandwich with {OrderText} {OrderText} {OrderText} and {OrderText} delivered to {Location}
-OrderIntent I want a sandwich with {OrderText} delivered to {Location}
-OrderIntent I want a sandwich with {OrderText} and {OrderText} delivered to {Location}
-OrderIntent I want a sandwich with {OrderText} {OrderText} and {OrderText} delivered to {Location}
-OrderIntent I want a sandwich with {OrderText} {OrderText} {OrderText} and {OrderText} delivered to {Location}
-CheckOrderIntent what is my order
-CheckOrderIntent check order
-```
-* Note that `{OrderText}` is used multiple times in some utterances to capture multiple ingredients.
+	Sample utterances are ways to invoke the intents and pass arguments into slots as arguments. The format 	is `[INTENT] [some phrase {some slot type} more words {some slot type}]`.
+	The sample utterances used for the sandwich maker is shown below. Copy and paste the utterances into 	the textbox for utterances.
+	
+	```
+	OrderIntent make a sandwich with {OrderText} delivered to {Location}
+	OrderIntent make a sandwich with {OrderText} and {OrderText} delivered to {Location}
+	OrderIntent make a sandwich with {OrderText} {OrderText} and {OrderText} delivered to {Location}
+	OrderIntent make a sandwich with {OrderText} {OrderText} {OrderText} and {OrderText} delivered to {Location}
+	OrderIntent make me a sandwich with {OrderText} delivered to {Location}
+	OrderIntent make me a sandwich with {OrderText} and {OrderText} delivered to {Location}
+	OrderIntent make me a sandwich with {OrderText} {OrderText} and {OrderText} delivered to {Location}
+	OrderIntent make me a sandwich with {OrderText} {OrderText} {OrderText} and {OrderText} delivered to {Location}
+	OrderIntent I want a sandwich with {OrderText} delivered to {Location}
+	OrderIntent I want a sandwich with {OrderText} and {OrderText} delivered to {Location}
+	OrderIntent I want a sandwich with {OrderText} {OrderText} and {OrderText} delivered to {Location}
+	OrderIntent I want a sandwich with {OrderText} {OrderText} {OrderText} and {OrderText} delivered to {Location}
+	CheckOrderIntent what is my order
+	CheckOrderIntent check order
+	```
+	* Note that `{OrderText}` is used multiple times in some utterances to capture multiple ingredients.
 
 4. Select the endpoint as "AWS Lambda ARN" and input the ARN copied earlier from the lambda function. Click "Next".
 
@@ -218,15 +246,21 @@ CheckOrderIntent check order
 	![Alexa Enable Skill](images/tutorial/alexa_enable_test.png)
 
 	The following commands orders a sandwich with lettuce and tomatoes delivered to bedroom. The second command confirms the order. If there are no errors, the Lambda Response should respond with a JSON object.
-    
+
 	![Alexa Enable Skill](images/tutorial/alexa_try_test.png)
     ![Alexa Enable Skill](images/tutorial/alexa_try_test_2.png)
 
 
 
-### Mbed Code
+## <a name="sandwich_maker_server"></a>Sandwich Maker Mbed and Server Code
 
-## Wiring for Mbed and Servos
+TODO: Short intro
+
+### 2.1 Wiring Tables
+
+TODO: Explain wiring and building?
+
+#### Wiring for Mbed and Servos
 | mbed Pin |Servo        |
 | -------- |------------:|
 | p21      | Servo I1 Signal (yellow) |
@@ -235,7 +269,7 @@ CheckOrderIntent check order
 | p24      | Servo I4 Signal (yellow) |
 | p25      | Servo Bread Signal (yellow) |
 
-## Wiring for Power Supply to Mbed/Servos
+#### Wiring for Power Supply to Mbed/Servos
 
 | Power Supply | mbed / servos pin|
 | -------- |------------:|
@@ -252,280 +286,286 @@ CheckOrderIntent check order
 | 5V       | Servo I4 Power (red) |
 | 5V       | Servo Bread Power (red) |
 
-1. Project Setup on mbed
+### 2.2 Mbed Code Download
 
-Include the `Servo.h` library and `mbed_rpc.h` library. The `Servo.h` library is useful for moving the servos to dispense ingredients and bread. The `mbed_rpc.h` library is used to handle RPC (Remote Procedure Calls) from the serial port.
-
-The `move_servos()` function sends out the signals to dispense the bread, each ingredient one by one, and finally another bread.
-
-```
-/* Make sandwich, using ingredient code */
-/*  Ingredient code is bit mask of ingredients needed */
-/*  Bit 0 -> Ingredient 0 needed (1) or not (0) */
-/*  Bit 1 -> Ingredient 0 needed (1) or not (0) */
-/*  Bit 2 -> Ingredient 0 needed (1) or not (0) */
-/*  Bit 3 -> Ingredient 0 needed (1) or not (0) */
-void move_servos(int ingr_code) {
-    /* Dispense bread */
-    servo_bread = 0; /* Dispense bread */
-    wait_ms(1000);
-    servo_bread = 1; /* Reset position */
-    wait_ms(1000);
-
-     /* Dispense ingredient 0 */
-    if (ingr_code & 0x1) {
-        servo_ingredient0 = 1; /* Open */
-        wait_ms(TIME_OPEN);
-        servo_ingredient0 = 0; /* Close */
-        wait_ms(TIME_AFTER_CLOSING);
-    }
-    /* Dispense ingredient 1 */
-    if (ingr_code & 0x2) {
-        servo_ingredient1 = 1; /* Open */
-        wait_ms(TIME_OPEN);
-        servo_ingredient1 = 0; /* Close */
-        wait_ms(TIME_AFTER_CLOSING);
-    }
-    /* Dispense ingredient 2 */
-    if (ingr_code & 0x4) {
-        servo_ingredient2 = 1; /* Open */
-        wait_ms(TIME_OPEN);
-        servo_ingredient2 = 0; /* Close */
-        wait_ms(TIME_AFTER_CLOSING);
-    }
-    /* Dispense ingredient 3 */
-    if (ingr_code & 0x8) {
-        servo_ingredient3 = 1; /* Open */
-        wait_ms(TIME_OPEN);
-        servo_ingredient3 = 0; /* Close */
-        wait_ms(TIME_AFTER_CLOSING);
-    }
-    /* Dispense bread again */
-    servo_bread = 0; /* Dispense bread */
-    wait_ms(1000);
-    servo_bread = 1; /* Reset position */
-    wait_ms(1000);
-}
-```
-
-Expose the function through RPC using the following code. The code declares a function `m_sand` that takes an integer argument and passes the argument to the `move_servos()` function declared earlier. For debugging purposes, the argument is output to the LEDs.
-
-```
-/* Declare function 'm_sand' exposed via RPC */
-void m_sand(Arguments *in, Reply *out);
-RPCFunction rpc_m_sand(&m_sand, "m_sand");
-void m_sand(Arguments *in, Reply *out)  {
-
-    /* Get argument */
-    int ingr_code = in->getArg<int>();
-
-    /* Output to LEDs for debugging */
-    mbed_leds = ingr_code;
-
-    /* Execute the function */
-    move_servos(ingr_code);
-
-    /* Set output */
-    out->putData("SandwichMade");
-
-    /* Reset LEDs */
-    mbed_leds = 0;    
-}
-```
-
-The main loop initializes the baud rate for the serial connection, sets up the buffers for the RPC calls, then loops forever to handle any RPC calls.
-
-```
-/* Main code */
-int main() {
-    /* Set pc serial baud rate */
-    pc.baud(9600);
-
-    // receive commands, and send back the responses
-    char buf[256], outbuf[256];
-
-    while(1) {
-        /* Wait for command */
-        while (!pc.readable()) {
-            wait_ms(100);
-        }
-        /* Read the characters into string array */
-        int i = 0;
-        while (pc.readable()) {
-            buf[i] = pc.getc();
-            i++;
-        }
-        buf[i] = '\n';
-        pc.printf("%s", buf);
-        //Call the static call method on the RPC class
-        RPC::call(buf, outbuf);
-        pc.printf("%s\n", outbuf);
-        /* Flush pc serial buffer */
-        while (pc.readable()) {
-            pc.getc();
-        }
-    }
-
-}
-```
+1. Mbed Code Download
+	
+	The mbed code can be imported to the compiler [here](https://developer.mbed.org/users/K2Silver/code/SandwichMaker/). Alternatively, the binary file is available in the `/bin/SandwichMaker_LPC1768.bin`.
 
 2. Test RPC Call
-To test RPC calls, first connect to the mbed using a USB cable. Use a serial program like RealTerm and open the virtual COM port connection with a baud rate of 9600. Send `/m_sand/run [integer]` through the serial connection, replacing `[integer]` with a number from 0 to 15. The number represents which ingredient to dispense.
+	To test RPC calls, first connect to the mbed using a USB cable. Use a serial program like RealTerm and open the virtual COM port connection with a baud rate of 9600. Send `/m_sand/run [integer]` through the serial connection, replacing `[integer]` with a number from 0 to 15. The number represents which ingredient to dispense.
+	
+	```
+	/*  Bit 0 -> Ingredient 0 needed (1) or not (0) */
+	/*  Bit 1 -> Ingredient 0 needed (1) or not (0) */
+	/*  Bit 2 -> Ingredient 0 needed (1) or not (0) */
+	/*  Bit 3 -> Ingredient 0 needed (1) or not (0) */
+	```
 
-```
-/*  Bit 0 -> Ingredient 0 needed (1) or not (0) */
-/*  Bit 1 -> Ingredient 0 needed (1) or not (0) */
-/*  Bit 2 -> Ingredient 0 needed (1) or not (0) */
-/*  Bit 3 -> Ingredient 0 needed (1) or not (0) */
-```
+3. Mbed Code Walkthrough 
 
-### Sandwich Maker Server
+	This section explains the mbed code in more detail.
+	
+	The projects uses the `Servo.h` library and `mbed_rpc.h` library. The `Servo.h` library is useful for moving the servos to dispense ingredients and bread. The `mbed_rpc.h` library is used to handle RPC (Remote Procedure Calls) from the serial port.
+	
+	The `move_servos()` function sends out the signals to dispense the bread, each ingredient one by one, and finally another bread.
+	
+	```
+	/* Make sandwich, using ingredient code */
+	/*  Ingredient code is bit mask of ingredients needed */
+	/*  Bit 0 -> Ingredient 0 needed (1) or not (0) */
+	/*  Bit 1 -> Ingredient 0 needed (1) or not (0) */
+	/*  Bit 2 -> Ingredient 0 needed (1) or not (0) */
+	/*  Bit 3 -> Ingredient 0 needed (1) or not (0) */
+	void move_servos(int ingr_code) {
+	    /* Dispense bread */
+	    servo_bread = 0; /* Dispense bread */
+	    wait_ms(1000);
+	    servo_bread = 1; /* Reset position */
+	    wait_ms(1000);
+	
+	     /* Dispense ingredient 0 */
+	    if (ingr_code & 0x1) {
+	        servo_ingredient0 = 1; /* Open */
+	        wait_ms(TIME_OPEN);
+	        servo_ingredient0 = 0; /* Close */
+	        wait_ms(TIME_AFTER_CLOSING);
+	    }
+	    /* Dispense ingredient 1 */
+	    if (ingr_code & 0x2) {
+	        servo_ingredient1 = 1; /* Open */
+	        wait_ms(TIME_OPEN);
+	        servo_ingredient1 = 0; /* Close */
+	        wait_ms(TIME_AFTER_CLOSING);
+	    }
+	    /* Dispense ingredient 2 */
+	    if (ingr_code & 0x4) {
+	        servo_ingredient2 = 1; /* Open */
+	        wait_ms(TIME_OPEN);
+	        servo_ingredient2 = 0; /* Close */
+	        wait_ms(TIME_AFTER_CLOSING);
+	    }
+	    /* Dispense ingredient 3 */
+	    if (ingr_code & 0x8) {
+	        servo_ingredient3 = 1; /* Open */
+	        wait_ms(TIME_OPEN);
+	        servo_ingredient3 = 0; /* Close */
+	        wait_ms(TIME_AFTER_CLOSING);
+	    }
+	    /* Dispense bread again */
+	    servo_bread = 0; /* Dispense bread */
+	    wait_ms(1000);
+	    servo_bread = 1; /* Reset position */
+	    wait_ms(1000);
+	}
+	```
+	
+	Expose the function through RPC using the following code. The code declares a function `m_sand` that takes an integer argument and passes the argument to the `move_servos()` function declared earlier. For debugging purposes, the argument is output to the LEDs.
+	
+	```
+	/* Declare function 'm_sand' exposed via RPC */
+	void m_sand(Arguments *in, Reply *out);
+	RPCFunction rpc_m_sand(&m_sand, "m_sand");
+	void m_sand(Arguments *in, Reply *out)  {
+	
+	    /* Get argument */
+	    int ingr_code = in->getArg<int>();
+	
+	    /* Output to LEDs for debugging */
+	    mbed_leds = ingr_code;
+	
+	    /* Execute the function */
+	    move_servos(ingr_code);
+	
+	    /* Set output */
+	    out->putData("SandwichMade");
+	
+	    /* Reset LEDs */
+	    mbed_leds = 0;    
+	}
+	```
+	
+	The main loop initializes the baud rate for the serial connection, sets up the buffers for the RPC calls, then loops forever to handle any RPC calls.
+	
+	```
+	/* Main code */
+	int main() {
+	    /* Set pc serial baud rate */
+	    pc.baud(9600);
+	
+	    // receive commands, and send back the responses
+	    char buf[256], outbuf[256];
+	
+	    while(1) {
+	        /* Wait for command */
+	        while (!pc.readable()) {
+	            wait_ms(100);
+	        }
+	        /* Read the characters into string array */
+	        int i = 0;
+	        while (pc.readable()) {
+	            buf[i] = pc.getc();
+	            i++;
+	        }
+	        buf[i] = '\n';
+	        pc.printf("%s", buf);
+	        //Call the static call method on the RPC class
+	        RPC::call(buf, outbuf);
+	        pc.printf("%s\n", outbuf);
+	        /* Flush pc serial buffer */
+	        while (pc.readable()) {
+	            pc.getc();
+	        }
+	    }
+	
+	}
+	```
+
+#### 2.3 Sandwich Maker Server
 1. Configure DynamoDB Key and Password
 
-To connect to the DynamoDB server hosted on Amazon, the key, passphrase, and region are all necessary. The source code includes a `config_template.json` file with the following code:
+	To connect to the DynamoDB server hosted on Amazon, the key, passphrase, and region are all necessary. The source code includes a `config_template.json` file with the following code:
+	
+	```
+	{
+	  "AWS_KEY":"YOUR_AWS_KEY_HERE",
+	  "AWS_PASS":"YOUR_AWS_PASS_HERE",
+	  "DYNAMODB_REGION":"YOUR_REGION_HERE"
+	}
+	```
+	
+	Replace `YOUR_AWS_KEY_HERE` and `YOUR_AWS_PASS_HERE` with the IAM access key ID and secret password copied from the DynamoDB user setup section. More information can be obtained from the [IAM console](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html). Use `us-east-1` for `YOUR_REGION_HERE` (since Amazon Alexa seems to only support this region reliably). Then, rename the `config_template.json` to `config.json`. This file will be used the python code to authenticate itself to the DynamoDB database.
 
-```
-{
-  "AWS_KEY":"YOUR_AWS_KEY_HERE",
-  "AWS_PASS":"YOUR_AWS_PASS_HERE",
-  "DYNAMODB_REGION":"YOUR_REGION_HERE"
-}
-```
+2. Python Sandwich Maker Server Walkthrough
 
-Replace `YOUR_AWS_KEY_HERE` and `YOUR_AWS_PASS_HERE` with the IAM access key ID and secret password. More information can be obtained from the [IAM console](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html). Use `us-east-1` for `YOUR_REGION_HERE` for now (since Amazon Alexa seems to only support this region reliably).
-
-2.Python Sandwich Maker Server
-
-The code for the sandwich maker server (which issues commands to the mbed via RPC) is written in Python. The server code relies heavily on `boto3` library, which allows API calls to the Amazon DynamoDB database.
-
-The following are the table column names. `CustomerId` is used as the primary key.
-
-```
-# Column names for table
-COL_CUSTOMERID = 'CustomerId'
-COL_INGREDIENTS = 'Ingredients'
-COL_TIMESTAMP = 'Timestamp'
-COL_LOCATION = 'Location'
-COL_STATUS = 'OrderStatus'
-```
-
-The following are constants used for the `OrderStatus` column in the database.
-
-```
-# Constants for table
-STATUS_PENDING = 'pending'
-STATUS_WAITING = 'waiting'
-STATUS_DELIVERING = 'delivering'
-```
-
-To access the DynamoDB database, read in the configuration file and open a new session using the key and password.
-
-```
-# DynamoDB Access information
-# Read key information from config file
-with open('config.json') as json_data_file:
-    config_data = json.load(json_data_file)
-AWS_KEY = config_data['AWS_KEY']
-AWS_PASS = config_data['AWS_PASS']
-DYNAMODB_REGION = config_data['DYNAMODB_REGION']
-DYNAMODB_ENDPOINT_URL = 'https://dynamodb.aws-east-1.amazonaws.com'
-dynamodb_session = Session(aws_access_key_id=AWS_KEY,
-              aws_secret_access_key=AWS_PASS,
-              region_name=DYNAMODB_REGION)
-dynamodb = dynamodb_session.resource('dynamodb')
-```
-
-The list of ingredients allowed are defined in the server code, along with a parser function to extract the ingredients and convert to an integer code.
-
-```
-# Helper function to parse list of ingredients and conver to code for dispenser
-ingredients_valid = ['lettuce', 'tomatoes', 'cheese', 'onions']
-ingredient_value = {
-    'lettuce': 1,
-    'tomatoes': 2,
-    'cheese': 4,
-    'onions': 8
-}
-negative_token = ['no', 'without']
-or_operator = 'or'
-```
-
-The Python code below sends the RPC command after parsing the ingredient string.
-
-```
-# Dispatch order by sending commands to microcontroller
-def dispatch_order(order):
-    print ("Sandwich with " + order[COL_INGREDIENTS] + " delivering to " + order[COL_LOCATION])
-    ingredient_code = parse_ingredients(order[COL_INGREDIENTS])
-    print ("Running command \"/m_sand/run " + str(ingredient_code) + "\"")
-    ser.write("/m_sand/run " + str(ingredient_code))
-    response = ser.readline()
-    print (response) # Wait until mbed resopnds that sandwich is made
-    while ("Made sandwich" not in response):
-        response += ser.readline()
-        time.sleep(1)
-        print (response)
-    print ("Done making sandwich")
-```
-
-This function is called in the main loop to get the next order and dispatch it to the mbed. If the mbed successfully receives and executes the RPC call, then the code below updates the status from `pending` to `waiting`, which will allow the robot to notice that a sandwich is ready to be delivered.
-
-```
-# Send next order by dispatching order to microcontroller and updating status
-def send_next_order():
-    json_response = table_get_all_orders()
-    num_orders = json_response['Count'];
-    if (num_orders != 0):
-        print ("Found next order ...")
-        next_order = find_next_order(json_response["Items"])
-
-        # Dispatch order to dispenser
-        dispatch_order(next_order)
-
-        # Update status of order to delivering
-        next_order[COL_STATUS] = STATUS_WAITING
-        update_order(next_order)
-
-        # Return true if order updated successfully
-        return True
-    else: # Else, return false
-        return False
-```
-
-The main code opens a serial connection with a baud rate of 9600. Change the com port value from `COM4` to whatever COM port that the mbed connects to.
-
-```
-# Attempt to open serial connection
-ser = serial.Serial()
-ser.baudrate = 9600
-ser.port = 'COM4'
-ser.open()
-if(not ser.is_open):
-    print("Error opening COM port")
-    sys.exit(1)
-```
-
-After opening a serial connection, loop forever until a keyboard interrupt (Ctrl-C). In the loop, check for new orders from the database, waiting 10 seconds in between checks to not overload the server.
-
-```
-# Main loop that checks for orders and executes them
-try:
-    while True:
-    # Check if delivering any orders
-    # If not, send a new order
-        if (not is_delivering_order()):
-            send_next_order()
-            print ("Order sent ...")
-        else:
-            print ("Delivering now ...")
-        time.sleep(10) # sleep for 10 seconds (not overload database server)
-
-# Keyboard interrupt (Ctrl-C) pressed, exit program
-except KeyboardInterrupt:
-    ser.close()
-    print ("Exited Program\n")
-    sys.exit(0)
-```
+	The code for the sandwich maker server (which issues commands to the mbed via RPC) is written in Python. The server code relies heavily on `boto3` library, which allows API calls to the Amazon DynamoDB database.
+	
+	The following are the table column names. `CustomerId` is used as the primary key.
+	
+	```
+	# Column names for table
+	COL_CUSTOMERID = 'CustomerId'
+	COL_INGREDIENTS = 'Ingredients'
+	COL_TIMESTAMP = 'Timestamp'
+	COL_LOCATION = 'Location'
+	COL_STATUS = 'OrderStatus'
+	```
+	
+	The following are constants used for the `OrderStatus` column in the database.
+	
+	```
+	# Constants for table
+	STATUS_PENDING = 'pending'
+	STATUS_WAITING = 'waiting'
+	STATUS_DELIVERING = 'delivering'
+	```
+	
+	To access the DynamoDB database, read in the configuration file and open a new session using the key and password.
+	
+	```
+	# DynamoDB Access information
+	# Read key information from config file
+	with open('config.json') as json_data_file:
+	    config_data = json.load(json_data_file)
+	AWS_KEY = config_data['AWS_KEY']
+	AWS_PASS = config_data['AWS_PASS']
+	DYNAMODB_REGION = config_data['DYNAMODB_REGION']
+	DYNAMODB_ENDPOINT_URL = 'https://dynamodb.aws-east-1.amazonaws.com'
+	dynamodb_session = Session(aws_access_key_id=AWS_KEY,
+	              aws_secret_access_key=AWS_PASS,
+	              region_name=DYNAMODB_REGION)
+	dynamodb = dynamodb_session.resource('dynamodb')
+	```
+	
+	The list of ingredients allowed are defined in the server code, along with a parser function to extract the ingredients and convert to an integer code.
+	
+	```
+	# Helper function to parse list of ingredients and conver to code for dispenser
+	ingredients_valid = ['lettuce', 'tomatoes', 'cheese', 'onions']
+	ingredient_value = {
+	    'lettuce': 1,
+	    'tomatoes': 2,
+	    'cheese': 4,
+	    'onions': 8
+	}
+	```
+	
+	The Python code below sends the RPC command after parsing the ingredient string.
+	
+	```
+	# Dispatch order by sending commands to microcontroller
+	def dispatch_order(order):
+	    print ("Sandwich with " + order[COL_INGREDIENTS] + " delivering to " + order[COL_LOCATION])
+	    ingredient_code = parse_ingredients(order[COL_INGREDIENTS])
+	    print ("Running command \"/m_sand/run " + str(ingredient_code) + "\"")
+	    ser.write("/m_sand/run " + str(ingredient_code))
+	    response = ser.readline()
+	    print (response) # Wait until mbed resopnds that sandwich is made
+	    while ("Made sandwich" not in response):
+	        response += ser.readline()
+	        time.sleep(1)
+	        print (response)
+	    print ("Done making sandwich")
+	```
+	
+	This function is called in the main loop to get the next order and dispatch it to the mbed. If the mbed successfully receives and executes the RPC call, then the code below updates the status from `pending` to `waiting`, which will allow the robot to notice that a sandwich is ready to be delivered.
+	
+	```
+	# Send next order by dispatching order to microcontroller and updating status
+	def send_next_order():
+	    json_response = table_get_all_orders()
+	    num_orders = json_response['Count'];
+	    if (num_orders != 0):
+	        print ("Found next order ...")
+	        next_order = find_next_order(json_response["Items"])
+	
+	        # Dispatch order to dispenser
+	        dispatch_order(next_order)
+	
+	        # Update status of order to delivering
+	        next_order[COL_STATUS] = STATUS_WAITING
+	        update_order(next_order)
+	
+	        # Return true if order updated successfully
+	        return True
+	    else: # Else, return false
+	        return False
+	```
+	
+	The main code opens a serial connection with a baud rate of 9600. Change the com port value from `COM4` to whatever COM port that the mbed connects to.
+	
+	```
+	# Attempt to open serial connection
+	ser = serial.Serial()
+	ser.baudrate = 9600
+	ser.port = 'COM4'
+	ser.open()
+	if(not ser.is_open):
+	    print("Error opening COM port")
+	    sys.exit(1)
+	```
+	
+	After opening a serial connection, loop forever until a keyboard interrupt (Ctrl-C). In the loop, check for new orders from the database, waiting 10 seconds in between checks to not overload the server.
+	
+	```
+	# Main loop that checks for orders and executes them
+	try:
+	    while True:
+	    # Check if delivering any orders
+	    # If not, send a new order
+	        if (not is_delivering_order()):
+	            send_next_order()
+	            print ("Order sent ...")
+	        else:
+	            print ("Delivering now ...")
+	        time.sleep(10) # sleep for 10 seconds (not overload database server)
+	
+	# Keyboard interrupt (Ctrl-C) pressed, exit program
+	except KeyboardInterrupt:
+	    ser.close()
+	    print ("Exited Program\n")
+	    sys.exit(0)
+	```
 
 ### Sandwich Delivery Robot
 TODO: Post C# Code examples
@@ -540,4 +580,5 @@ TODO: Post gallery
 TODO: Post working video
 
 ## FAQ
-5. FAQ: Connecting to GTother
+* Connecting to GTother TODO
+
