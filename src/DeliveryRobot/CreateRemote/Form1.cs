@@ -62,7 +62,7 @@ namespace CreateRemote
 
         // Constants
         public volatile short d45 = 92; // turning distance for 45 degrees when both wheels are turning
-        public static readonly short d_block = 250; // Block size for map grid in mm
+        public static readonly short d_block = 330; // Block size for map grid in mm
 
         // variables for control system
         public volatile short new_l, old_l, l, base_l, new_r, old_r, r, base_r;
@@ -277,63 +277,6 @@ namespace CreateRemote
             port.Write(new byte[] { (byte)Commands.CoverandDock }, 0, 1);
         }
 
-        // 0 degree and 1 distance
-        private void btnNorth_Click(object sender, EventArgs e)
-        {
-            // Setcommand and run in worker background thread
-            commandList.Clear();
-            commandList.Add(DirectionCommand.N);
-            bwExecuteCommands.RunWorkerAsync();
-        }
-        // 45 degree and sqrt(2) distance
-        private void btnNorthEast_Click(object sender, EventArgs e)
-        {
-            commandList.Clear();
-            commandList.Add(DirectionCommand.NE);
-            bwExecuteCommands.RunWorkerAsync();
-        }
-        // 90 degree and 1 distance
-        private void btnEast_Click(object sender, EventArgs e)
-        {
-            commandList.Clear();
-            commandList.Add(DirectionCommand.E);
-            bwExecuteCommands.RunWorkerAsync();
-        }
-        // 135 degree and sqrt(2) distance
-        private void btnSouthEast_Click(object sender, EventArgs e)
-        {
-            commandList.Clear();
-            commandList.Add(DirectionCommand.SE);
-            bwExecuteCommands.RunWorkerAsync();
-        }
-        // 180 degree and 1 distance
-        private void btnSouth_Click(object sender, EventArgs e)
-        {
-            commandList.Clear();
-            commandList.Add(DirectionCommand.S);
-            bwExecuteCommands.RunWorkerAsync();
-        }
-        // 225 degree and sqrt(2) distance
-        private void btnSouthWest_Click(object sender, EventArgs e)
-        {
-            commandList.Clear();
-            commandList.Add(DirectionCommand.SW);
-            bwExecuteCommands.RunWorkerAsync();
-        }
-        // 270 degree and 1 distance
-        private void btnWest_Click(object sender, EventArgs e)
-        {
-            commandList.Clear();
-            commandList.Add(DirectionCommand.W);
-            bwExecuteCommands.RunWorkerAsync();
-        }
-        // 315 degree and sqrt(2) distance
-        private void btnNorthWest_Click(object sender, EventArgs e)
-        {
-            commandList.Clear();
-            commandList.Add(DirectionCommand.NW);
-            bwExecuteCommands.RunWorkerAsync();
-        }
 
         // Display raw sensor value or not
         private void checkBoxRawSensor_CheckedChanged(object sender, EventArgs e)
@@ -349,24 +292,11 @@ namespace CreateRemote
                 // Use python script to get next destination
                 String result = run_python(PYTHON_SCRIPT_UPDATE_TABLE, CHECK_NEXT_ORDER);
 
-                // If destinatino is not "NoOrdersReady", find destination and get new command
+                // If destination is not "NoOrdersReady", find destination and get new command
                 if (result != "NoOrdersReady")
                 {
                     int[] destination = new int[] { -1, -1 };
-                    switch (result) {
-                        case "kitchen":
-                            destination = new int[] { 6, 5 };
-                            break;
-                        case "dining":
-                            destination = new int[] { 6, 2 };
-                            break;
-                        case "bedroom":
-                            destination = new int[] { 2, 6 };
-                            break;
-                        default:
-                            destination = new int[] { 6, 2 };
-                            break;
-                    }
+                    destination = map.getDestinationByName(result.Substring(0,1).ToUpper());
 
                     // Solve path based on map and destination
                     List<int> path = PathFinder.solve(map, destination);
@@ -773,7 +703,6 @@ namespace CreateRemote
 
         private void btnImport_Click(object sender, EventArgs e)
         {
-            //String textToInput = System.IO.File.ReadAllText(@"C:\Users\Public\Export.txt");
             OpenFileDialog openMapDialog = new OpenFileDialog();
             if (openMapDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
@@ -796,8 +725,7 @@ namespace CreateRemote
         private void btnExport_Click(object sender, EventArgs e)
         {
             // Text to output to the file
-            String textToOutput = txtboxRow.Text + "," + txtboxColumn.Text + "," + String.Join(",", map.getIntMap());
-            //System.IO.File.WriteAllText(@"C:\Users\Public\Export.txt", textToOutput);
+            String textToOutput = txtboxRow.Text + "," + txtboxColumn.Text + "," + String.Join(",", map.getIntMap()) + "," + String.Join(";", map.getDestinations().Select(x => x.Key + "=" + x.Value[0] + ":" + x.Value[1]).ToArray());
 
             SaveFileDialog saveMapDialog = new SaveFileDialog();
             saveMapDialog.Filter = "Text File|*.txt";
@@ -842,13 +770,18 @@ namespace CreateRemote
         }
 
     }
-    
+
     // Map class that has matrix of buttons to represent room
     public class Map
     {
+        // Member variables
         private Button[] btnArray;
         private int rowNum;
         private int colNum;
+        private Dictionary<String, int[]> destinations;
+        private int numDest;
+
+        // Constants
         private static readonly String BUTTON_WALL_NUM = "1";
         private static readonly String BUTTON_START_NUM = "2";
         private static readonly String BUTTON_FINISH_NUM = "3";
@@ -862,6 +795,16 @@ namespace CreateRemote
         private static readonly Color COLOR_START_BUTTON = Color.Blue;
         private static readonly Color COLOR_FINISH_BUTTON = Color.Red;
         private static readonly Color COLOR_PATH = Color.Green;
+
+        private static readonly String DEST_KITCHEN = "K";
+        private static readonly String DEST_DINING_ROOM = "D";
+        private static readonly String DEST_OFFICE = "O";
+        private static readonly String DEST_BEDROOM = "B";
+
+        private static readonly String[] DEST_CHAR = new string[] { DEST_KITCHEN, DEST_DINING_ROOM, DEST_OFFICE, DEST_BEDROOM };
+
+        private static int DEST_MAX = 4;
+
 
         public int getRowNum()
         {
@@ -883,6 +826,7 @@ namespace CreateRemote
             this.rowNum = rowNum;
             this.colNum = colNum;
             this.btnArray = new Button[rowNum * colNum];
+            this.numDest = 0;
 
             for (int i = 0; i < btnArray.Length; i++)
             {
@@ -891,6 +835,9 @@ namespace CreateRemote
                 btnArray[i].BackColor = Color.White;
                 btnArray[i].Click += new System.EventHandler(toggleButton);
             }
+
+            // Initialize destination dictionary
+            this.destinations = new Dictionary<String, int[]>();
         }
 
 
@@ -898,11 +845,12 @@ namespace CreateRemote
         {
             char delimiterChar = ',';
             String[] words = mapText.Split(delimiterChar);
-
-            // Copied from Generate_click
+            
             // Attempt to parse the values from the text input (may switch to dropdown later)
             Int32.TryParse(words[0], out rowNum);
             Int32.TryParse(words[1], out colNum);
+
+            this.numDest = 0;
 
             // Allocate memory for button array
             this.btnArray = new Button[rowNum * colNum];
@@ -918,6 +866,12 @@ namespace CreateRemote
                 else if (words[i + 2] == BUTTON_FINISH_NUM) { btnArray[i].BackColor = COLOR_FINISH_BUTTON; btnArray[i].Text = BUTTON_FINISH; }
                 btnArray[i].Click += new System.EventHandler(toggleButton);
             }
+
+            // Initialize destination dictionary
+            this.destinations = new Dictionary<String, int[]>();
+
+            // Add destinations to dictionary
+            //TODO.
         }
 
         // Check if a start square exists in the button array
@@ -938,6 +892,20 @@ namespace CreateRemote
                 if (btn.Text == BUTTON_FINISH) return true;
             }
             return false;
+        }
+
+        // Get all destinations
+        public Dictionary<String,int[]> getDestinations()
+        {
+            return destinations;
+        }
+
+        // Get destination based on destination name
+        public int[] getDestinationByName(String destName)
+        {
+            int[] dest = new int[] { -1, -1 };
+            destinations.TryGetValue(destName, out dest);
+            return dest;
         }
 
         // Get location with text as parameter
@@ -1132,10 +1100,17 @@ namespace CreateRemote
                     btn.Text = BUTTON_START;
                 }
                 // If end square does not exist, set to end
-                else if (!finishExists())
+                //else if (!finishExists())
+                //{
+                //    btn.BackColor = COLOR_FINISH_BUTTON;
+                //    btn.Text = BUTTON_FINISH;
+                //}
+                else if (numDest < DEST_MAX)
                 {
                     btn.BackColor = COLOR_FINISH_BUTTON;
-                    btn.Text = BUTTON_FINISH;
+                    btn.Text = DEST_CHAR[numDest];
+                    destinations.Add(btn.Text, getLoc(btn.Text));
+                    this.numDest++;
                 }
                 else
                 {
@@ -1143,17 +1118,17 @@ namespace CreateRemote
                     btn.Text = BUTTON_OPEN;
                 }
             }
-            // If start, set to finish if no finish
+            // If start, set to finish
             // Else, clear
             else if (btn.Text == BUTTON_START)
             {
-                // If end square does not exist, set to finish
-                if (!finishExists())
+                if (numDest < DEST_MAX)
                 {
                     btn.BackColor = COLOR_FINISH_BUTTON;
-                    btn.Text = BUTTON_FINISH;
+                    btn.Text = DEST_CHAR[numDest];
+                    destinations.Add(btn.Text, getLoc(btn.Text));
+                    this.numDest++;
                 }
-                // Else, set to default value (no wall)
                 else
                 {
                     btn.BackColor = COLOR_OPEN_BUTTON;
@@ -1161,10 +1136,12 @@ namespace CreateRemote
                 }
             }
             // If finish, clear
-            else if (btn.Text == BUTTON_FINISH)
+            else
             {
+                destinations.Remove(btn.Text);
                 btn.BackColor = COLOR_OPEN_BUTTON;
                 btn.Text = BUTTON_OPEN;
+                this.numDest--;
             }
         }
 

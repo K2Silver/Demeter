@@ -45,10 +45,6 @@
             this.btnNorthEast = new System.Windows.Forms.Button();
             this.btnEast = new System.Windows.Forms.Button();
             this.btnSouthEast = new System.Windows.Forms.Button();
-            this.btnSouth = new System.Windows.Forms.Button();
-            this.btnSouthWest = new System.Windows.Forms.Button();
-            this.btnWest = new System.Windows.Forms.Button();
-            this.buttonNorthWest = new System.Windows.Forms.Button();
             this.textBoxBaseL = new System.Windows.Forms.TextBox();
             this.groupBoxInfo = new System.Windows.Forms.GroupBox();
             this.labelAngleCalc = new System.Windows.Forms.Label();
@@ -64,14 +60,14 @@
             this.textBoxAngle = new System.Windows.Forms.TextBox();
             this.labelCurrentR = new System.Windows.Forms.Label();
             this.labelCurrentL = new System.Windows.Forms.Label();
+            this.labelTempL = new System.Windows.Forms.Label();
             this.textBoxCurrentR = new System.Windows.Forms.TextBox();
             this.textBoxCurrentL = new System.Windows.Forms.TextBox();
+            this.textBoxTempL = new System.Windows.Forms.TextBox();
             this.labelBaseR = new System.Windows.Forms.Label();
             this.labelBaseL = new System.Windows.Forms.Label();
             this.textBoxBaseR = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.labelTempL = new System.Windows.Forms.Label();
-            this.textBoxTempL = new System.Windows.Forms.TextBox();
             this.comboBoxCOM = new System.Windows.Forms.ComboBox();
             this.labelCOM = new System.Windows.Forms.Label();
             this.btnRefresh = new System.Windows.Forms.Button();
@@ -84,7 +80,6 @@
             this.labelColumn = new System.Windows.Forms.Label();
             this.labelRow = new System.Windows.Forms.Label();
             this.btnGenerate = new System.Windows.Forms.Button();
-            this.btnRunPython = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarSpeed)).BeginInit();
             this.groupBoxInfo.SuspendLayout();
             this.SuspendLayout();
@@ -191,7 +186,7 @@
             // 
             // trackBarSpeed
             // 
-            this.trackBarSpeed.Location = new System.Drawing.Point(524, 78);
+            this.trackBarSpeed.Location = new System.Drawing.Point(405, 78);
             this.trackBarSpeed.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.trackBarSpeed.Maximum = 500;
             this.trackBarSpeed.Minimum = 50;
@@ -207,7 +202,7 @@
             // labelSpeed
             // 
             this.labelSpeed.AutoSize = true;
-            this.labelSpeed.Location = new System.Drawing.Point(519, 40);
+            this.labelSpeed.Location = new System.Drawing.Point(400, 40);
             this.labelSpeed.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelSpeed.Name = "labelSpeed";
             this.labelSpeed.Size = new System.Drawing.Size(56, 20);
@@ -227,99 +222,39 @@
             // 
             // btnNorth
             // 
-            this.btnNorth.Location = new System.Drawing.Point(780, 32);
-            this.btnNorth.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnNorth.Location = new System.Drawing.Point(0, 0);
             this.btnNorth.Name = "btnNorth";
-            this.btnNorth.Size = new System.Drawing.Size(112, 35);
-            this.btnNorth.TabIndex = 17;
-            this.btnNorth.Text = "N";
-            this.btnNorth.UseVisualStyleBackColor = true;
-            this.btnNorth.Click += new System.EventHandler(this.btnNorth_Click);
+            this.btnNorth.Size = new System.Drawing.Size(75, 23);
+            this.btnNorth.TabIndex = 63;
             // 
             // btnNorthEast
             // 
-            this.btnNorthEast.Location = new System.Drawing.Point(921, 32);
-            this.btnNorthEast.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnNorthEast.Location = new System.Drawing.Point(0, 0);
             this.btnNorthEast.Name = "btnNorthEast";
-            this.btnNorthEast.Size = new System.Drawing.Size(112, 35);
-            this.btnNorthEast.TabIndex = 18;
-            this.btnNorthEast.Text = "NE";
-            this.btnNorthEast.UseVisualStyleBackColor = true;
-            this.btnNorthEast.Click += new System.EventHandler(this.btnNorthEast_Click);
+            this.btnNorthEast.Size = new System.Drawing.Size(75, 23);
+            this.btnNorthEast.TabIndex = 62;
             // 
             // btnEast
             // 
-            this.btnEast.Location = new System.Drawing.Point(921, 125);
-            this.btnEast.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnEast.Location = new System.Drawing.Point(0, 0);
             this.btnEast.Name = "btnEast";
-            this.btnEast.Size = new System.Drawing.Size(112, 35);
-            this.btnEast.TabIndex = 19;
-            this.btnEast.Text = "E";
-            this.btnEast.UseVisualStyleBackColor = true;
-            this.btnEast.Click += new System.EventHandler(this.btnEast_Click);
+            this.btnEast.Size = new System.Drawing.Size(75, 23);
+            this.btnEast.TabIndex = 61;
             // 
             // btnSouthEast
             // 
-            this.btnSouthEast.Location = new System.Drawing.Point(921, 222);
-            this.btnSouthEast.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnSouthEast.Location = new System.Drawing.Point(0, 0);
             this.btnSouthEast.Name = "btnSouthEast";
-            this.btnSouthEast.Size = new System.Drawing.Size(112, 35);
-            this.btnSouthEast.TabIndex = 20;
-            this.btnSouthEast.Text = "SE";
-            this.btnSouthEast.UseVisualStyleBackColor = true;
-            this.btnSouthEast.Click += new System.EventHandler(this.btnSouthEast_Click);
-            // 
-            // btnSouth
-            // 
-            this.btnSouth.Location = new System.Drawing.Point(780, 222);
-            this.btnSouth.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.btnSouth.Name = "btnSouth";
-            this.btnSouth.Size = new System.Drawing.Size(112, 35);
-            this.btnSouth.TabIndex = 21;
-            this.btnSouth.Text = "S";
-            this.btnSouth.UseVisualStyleBackColor = true;
-            this.btnSouth.Click += new System.EventHandler(this.btnSouth_Click);
-            // 
-            // btnSouthWest
-            // 
-            this.btnSouthWest.Location = new System.Drawing.Point(636, 222);
-            this.btnSouthWest.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.btnSouthWest.Name = "btnSouthWest";
-            this.btnSouthWest.Size = new System.Drawing.Size(112, 35);
-            this.btnSouthWest.TabIndex = 22;
-            this.btnSouthWest.Text = "SW";
-            this.btnSouthWest.UseVisualStyleBackColor = true;
-            this.btnSouthWest.Click += new System.EventHandler(this.btnSouthWest_Click);
-            // 
-            // btnWest
-            // 
-            this.btnWest.Location = new System.Drawing.Point(636, 125);
-            this.btnWest.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.btnWest.Name = "btnWest";
-            this.btnWest.Size = new System.Drawing.Size(112, 35);
-            this.btnWest.TabIndex = 23;
-            this.btnWest.Text = "W";
-            this.btnWest.UseVisualStyleBackColor = true;
-            this.btnWest.Click += new System.EventHandler(this.btnWest_Click);
-            // 
-            // buttonNorthWest
-            // 
-            this.buttonNorthWest.Location = new System.Drawing.Point(636, 32);
-            this.buttonNorthWest.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.buttonNorthWest.Name = "buttonNorthWest";
-            this.buttonNorthWest.Size = new System.Drawing.Size(112, 35);
-            this.buttonNorthWest.TabIndex = 24;
-            this.buttonNorthWest.Text = "NW";
-            this.buttonNorthWest.UseVisualStyleBackColor = true;
-            this.buttonNorthWest.Click += new System.EventHandler(this.btnNorthWest_Click);
+            this.btnSouthEast.Size = new System.Drawing.Size(75, 23);
+            this.btnSouthEast.TabIndex = 60;
             // 
             // textBoxBaseL
             // 
-            this.textBoxBaseL.Location = new System.Drawing.Point(128, 42);
+            this.textBoxBaseL.Location = new System.Drawing.Point(148, 43);
             this.textBoxBaseL.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.textBoxBaseL.Name = "textBoxBaseL";
             this.textBoxBaseL.ReadOnly = true;
-            this.textBoxBaseL.Size = new System.Drawing.Size(148, 26);
+            this.textBoxBaseL.Size = new System.Drawing.Size(166, 26);
             this.textBoxBaseL.TabIndex = 25;
             // 
             // groupBoxInfo
@@ -337,17 +272,19 @@
             this.groupBoxInfo.Controls.Add(this.textBoxAngle);
             this.groupBoxInfo.Controls.Add(this.labelCurrentR);
             this.groupBoxInfo.Controls.Add(this.labelCurrentL);
+            this.groupBoxInfo.Controls.Add(this.labelTempL);
             this.groupBoxInfo.Controls.Add(this.textBoxCurrentR);
             this.groupBoxInfo.Controls.Add(this.textBoxCurrentL);
+            this.groupBoxInfo.Controls.Add(this.textBoxTempL);
             this.groupBoxInfo.Controls.Add(this.labelBaseR);
             this.groupBoxInfo.Controls.Add(this.labelBaseL);
             this.groupBoxInfo.Controls.Add(this.textBoxBaseR);
             this.groupBoxInfo.Controls.Add(this.textBoxBaseL);
-            this.groupBoxInfo.Location = new System.Drawing.Point(636, 292);
+            this.groupBoxInfo.Location = new System.Drawing.Point(509, 171);
             this.groupBoxInfo.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBoxInfo.Name = "groupBoxInfo";
             this.groupBoxInfo.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBoxInfo.Size = new System.Drawing.Size(462, 452);
+            this.groupBoxInfo.Size = new System.Drawing.Size(366, 537);
             this.groupBoxInfo.TabIndex = 26;
             this.groupBoxInfo.TabStop = false;
             this.groupBoxInfo.Text = "Info";
@@ -365,17 +302,17 @@
             // textBoxAngleCalc
             // 
             this.textBoxAngleCalc.BackColor = System.Drawing.SystemColors.Control;
-            this.textBoxAngleCalc.Location = new System.Drawing.Point(128, 282);
+            this.textBoxAngleCalc.Location = new System.Drawing.Point(148, 283);
             this.textBoxAngleCalc.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.textBoxAngleCalc.Name = "textBoxAngleCalc";
             this.textBoxAngleCalc.ReadOnly = true;
-            this.textBoxAngleCalc.Size = new System.Drawing.Size(148, 26);
+            this.textBoxAngleCalc.Size = new System.Drawing.Size(166, 26);
             this.textBoxAngleCalc.TabIndex = 41;
             // 
             // labelReceived
             // 
             this.labelReceived.AutoSize = true;
-            this.labelReceived.Location = new System.Drawing.Point(10, 366);
+            this.labelReceived.Location = new System.Drawing.Point(10, 400);
             this.labelReceived.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelReceived.Name = "labelReceived";
             this.labelReceived.Size = new System.Drawing.Size(68, 20);
@@ -384,19 +321,20 @@
             // 
             // textBoxReceived
             // 
-            this.textBoxReceived.Location = new System.Drawing.Point(128, 362);
+            this.textBoxReceived.Location = new System.Drawing.Point(148, 400);
             this.textBoxReceived.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.textBoxReceived.Multiline = true;
             this.textBoxReceived.Name = "textBoxReceived";
             this.textBoxReceived.ReadOnly = true;
-            this.textBoxReceived.Size = new System.Drawing.Size(326, 26);
+            this.textBoxReceived.Size = new System.Drawing.Size(166, 67);
             this.textBoxReceived.TabIndex = 39;
             // 
             // btnSend
             // 
-            this.btnSend.Location = new System.Drawing.Point(144, 408);
+            this.btnSend.Location = new System.Drawing.Point(148, 482);
             this.btnSend.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSend.Name = "btnSend";
-            this.btnSend.Size = new System.Drawing.Size(112, 35);
+            this.btnSend.Size = new System.Drawing.Size(130, 35);
             this.btnSend.TabIndex = 27;
             this.btnSend.Text = "send";
             this.btnSend.UseVisualStyleBackColor = true;
@@ -414,10 +352,10 @@
             // 
             // textBoxCommand
             // 
-            this.textBoxCommand.Location = new System.Drawing.Point(128, 323);
+            this.textBoxCommand.Location = new System.Drawing.Point(148, 324);
             this.textBoxCommand.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.textBoxCommand.Name = "textBoxCommand";
-            this.textBoxCommand.Size = new System.Drawing.Size(148, 26);
+            this.textBoxCommand.Size = new System.Drawing.Size(166, 26);
             this.textBoxCommand.TabIndex = 37;
             this.textBoxCommand.TextChanged += new System.EventHandler(this.textBoxComand_TextChanged);
             // 
@@ -443,20 +381,20 @@
             // 
             // textBoxTurningDistance
             // 
-            this.textBoxTurningDistance.Location = new System.Drawing.Point(128, 242);
+            this.textBoxTurningDistance.Location = new System.Drawing.Point(148, 243);
             this.textBoxTurningDistance.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.textBoxTurningDistance.Name = "textBoxTurningDistance";
             this.textBoxTurningDistance.ReadOnly = true;
-            this.textBoxTurningDistance.Size = new System.Drawing.Size(148, 26);
+            this.textBoxTurningDistance.Size = new System.Drawing.Size(166, 26);
             this.textBoxTurningDistance.TabIndex = 34;
             // 
             // textBoxAngle
             // 
-            this.textBoxAngle.Location = new System.Drawing.Point(128, 202);
+            this.textBoxAngle.Location = new System.Drawing.Point(148, 203);
             this.textBoxAngle.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.textBoxAngle.Name = "textBoxAngle";
             this.textBoxAngle.ReadOnly = true;
-            this.textBoxAngle.Size = new System.Drawing.Size(148, 26);
+            this.textBoxAngle.Size = new System.Drawing.Size(166, 26);
             this.textBoxAngle.TabIndex = 33;
             // 
             // labelCurrentR
@@ -479,23 +417,42 @@
             this.labelCurrentL.TabIndex = 31;
             this.labelCurrentL.Text = "l";
             // 
+            // labelTempL
+            // 
+            this.labelTempL.AutoSize = true;
+            this.labelTempL.Location = new System.Drawing.Point(9, 365);
+            this.labelTempL.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelTempL.Name = "labelTempL";
+            this.labelTempL.Size = new System.Drawing.Size(57, 20);
+            this.labelTempL.TabIndex = 42;
+            this.labelTempL.Text = "temp_l";
+            // 
             // textBoxCurrentR
             // 
-            this.textBoxCurrentR.Location = new System.Drawing.Point(128, 162);
+            this.textBoxCurrentR.Location = new System.Drawing.Point(148, 163);
             this.textBoxCurrentR.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.textBoxCurrentR.Name = "textBoxCurrentR";
             this.textBoxCurrentR.ReadOnly = true;
-            this.textBoxCurrentR.Size = new System.Drawing.Size(148, 26);
+            this.textBoxCurrentR.Size = new System.Drawing.Size(166, 26);
             this.textBoxCurrentR.TabIndex = 30;
             // 
             // textBoxCurrentL
             // 
-            this.textBoxCurrentL.Location = new System.Drawing.Point(128, 122);
+            this.textBoxCurrentL.Location = new System.Drawing.Point(148, 123);
             this.textBoxCurrentL.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.textBoxCurrentL.Name = "textBoxCurrentL";
             this.textBoxCurrentL.ReadOnly = true;
-            this.textBoxCurrentL.Size = new System.Drawing.Size(148, 26);
+            this.textBoxCurrentL.Size = new System.Drawing.Size(166, 26);
             this.textBoxCurrentL.TabIndex = 29;
+            // 
+            // textBoxTempL
+            // 
+            this.textBoxTempL.Location = new System.Drawing.Point(148, 360);
+            this.textBoxTempL.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.textBoxTempL.Name = "textBoxTempL";
+            this.textBoxTempL.ReadOnly = true;
+            this.textBoxTempL.Size = new System.Drawing.Size(166, 26);
+            this.textBoxTempL.TabIndex = 41;
             // 
             // labelBaseR
             // 
@@ -519,31 +476,12 @@
             // 
             // textBoxBaseR
             // 
-            this.textBoxBaseR.Location = new System.Drawing.Point(128, 82);
+            this.textBoxBaseR.Location = new System.Drawing.Point(148, 83);
             this.textBoxBaseR.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.textBoxBaseR.Name = "textBoxBaseR";
             this.textBoxBaseR.ReadOnly = true;
-            this.textBoxBaseR.Size = new System.Drawing.Size(148, 26);
+            this.textBoxBaseR.Size = new System.Drawing.Size(166, 26);
             this.textBoxBaseR.TabIndex = 26;
-            // 
-            // labelTempL
-            // 
-            this.labelTempL.AutoSize = true;
-            this.labelTempL.Location = new System.Drawing.Point(646, 758);
-            this.labelTempL.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.labelTempL.Name = "labelTempL";
-            this.labelTempL.Size = new System.Drawing.Size(57, 20);
-            this.labelTempL.TabIndex = 42;
-            this.labelTempL.Text = "temp_l";
-            // 
-            // textBoxTempL
-            // 
-            this.textBoxTempL.Location = new System.Drawing.Point(764, 754);
-            this.textBoxTempL.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.textBoxTempL.Name = "textBoxTempL";
-            this.textBoxTempL.ReadOnly = true;
-            this.textBoxTempL.Size = new System.Drawing.Size(148, 26);
-            this.textBoxTempL.TabIndex = 41;
             // 
             // comboBoxCOM
             // 
@@ -577,7 +515,7 @@
             // 
             // btnClear
             // 
-            this.btnClear.Location = new System.Drawing.Point(1674, 52);
+            this.btnClear.Location = new System.Drawing.Point(763, 48);
             this.btnClear.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnClear.Name = "btnClear";
             this.btnClear.Size = new System.Drawing.Size(112, 35);
@@ -588,7 +526,7 @@
             // 
             // btnExport
             // 
-            this.btnExport.Location = new System.Drawing.Point(1430, 97);
+            this.btnExport.Location = new System.Drawing.Point(519, 93);
             this.btnExport.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnExport.Name = "btnExport";
             this.btnExport.Size = new System.Drawing.Size(112, 35);
@@ -599,7 +537,7 @@
             // 
             // btnImport
             // 
-            this.btnImport.Location = new System.Drawing.Point(1551, 97);
+            this.btnImport.Location = new System.Drawing.Point(640, 93);
             this.btnImport.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnImport.Name = "btnImport";
             this.btnImport.Size = new System.Drawing.Size(112, 35);
@@ -610,7 +548,7 @@
             // 
             // btnSolve
             // 
-            this.btnSolve.Location = new System.Drawing.Point(1551, 52);
+            this.btnSolve.Location = new System.Drawing.Point(640, 48);
             this.btnSolve.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSolve.Name = "btnSolve";
             this.btnSolve.Size = new System.Drawing.Size(112, 35);
@@ -621,24 +559,24 @@
             // 
             // txtboxColumn
             // 
-            this.txtboxColumn.Location = new System.Drawing.Point(1248, 57);
+            this.txtboxColumn.Location = new System.Drawing.Point(1018, 57);
             this.txtboxColumn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtboxColumn.Name = "txtboxColumn";
-            this.txtboxColumn.Size = new System.Drawing.Size(148, 26);
+            this.txtboxColumn.Size = new System.Drawing.Size(92, 26);
             this.txtboxColumn.TabIndex = 50;
             // 
             // txtboxRow
             // 
-            this.txtboxRow.Location = new System.Drawing.Point(1077, 57);
+            this.txtboxRow.Location = new System.Drawing.Point(933, 57);
             this.txtboxRow.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtboxRow.Name = "txtboxRow";
-            this.txtboxRow.Size = new System.Drawing.Size(148, 26);
+            this.txtboxRow.Size = new System.Drawing.Size(77, 26);
             this.txtboxRow.TabIndex = 49;
             // 
             // labelColumn
             // 
             this.labelColumn.AutoSize = true;
-            this.labelColumn.Location = new System.Drawing.Point(1244, 32);
+            this.labelColumn.Location = new System.Drawing.Point(1014, 32);
             this.labelColumn.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelColumn.Name = "labelColumn";
             this.labelColumn.Size = new System.Drawing.Size(71, 20);
@@ -648,7 +586,7 @@
             // labelRow
             // 
             this.labelRow.AutoSize = true;
-            this.labelRow.Location = new System.Drawing.Point(1072, 32);
+            this.labelRow.Location = new System.Drawing.Point(928, 32);
             this.labelRow.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelRow.Name = "labelRow";
             this.labelRow.Size = new System.Drawing.Size(49, 20);
@@ -657,7 +595,7 @@
             // 
             // btnGenerate
             // 
-            this.btnGenerate.Location = new System.Drawing.Point(1430, 52);
+            this.btnGenerate.Location = new System.Drawing.Point(519, 48);
             this.btnGenerate.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnGenerate.Name = "btnGenerate";
             this.btnGenerate.Size = new System.Drawing.Size(112, 35);
@@ -670,8 +608,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1804, 835);
-            this.Controls.Add(this.btnRunPython);
+            this.ClientSize = new System.Drawing.Size(1465, 747);
             this.Controls.Add(this.btnClear);
             this.Controls.Add(this.btnExport);
             this.Controls.Add(this.btnImport);
@@ -684,13 +621,7 @@
             this.Controls.Add(this.btnRefresh);
             this.Controls.Add(this.labelCOM);
             this.Controls.Add(this.comboBoxCOM);
-            this.Controls.Add(this.labelTempL);
             this.Controls.Add(this.groupBoxInfo);
-            this.Controls.Add(this.textBoxTempL);
-            this.Controls.Add(this.buttonNorthWest);
-            this.Controls.Add(this.btnWest);
-            this.Controls.Add(this.btnSouthWest);
-            this.Controls.Add(this.btnSouth);
             this.Controls.Add(this.btnSouthEast);
             this.Controls.Add(this.btnEast);
             this.Controls.Add(this.btnNorthEast);
@@ -737,10 +668,6 @@
         private System.Windows.Forms.Button btnNorthEast;
         private System.Windows.Forms.Button btnEast;
         private System.Windows.Forms.Button btnSouthEast;
-        private System.Windows.Forms.Button btnSouth;
-        private System.Windows.Forms.Button btnSouthWest;
-        private System.Windows.Forms.Button btnWest;
-        private System.Windows.Forms.Button buttonNorthWest;
         private System.Windows.Forms.TextBox textBoxBaseL;
         private System.Windows.Forms.GroupBox groupBoxInfo;
         private System.Windows.Forms.Label labelBaseR;
@@ -776,7 +703,6 @@
         private System.Windows.Forms.Button btnGenerate;
         private System.Windows.Forms.Label labelAngleCalc;
         private System.Windows.Forms.TextBox textBoxAngleCalc;
-        private System.Windows.Forms.Button btnRunPython;
     }
 }
 
