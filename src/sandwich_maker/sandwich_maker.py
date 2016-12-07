@@ -19,6 +19,9 @@ import sys
 import datetime
 import re
 
+# COM port
+COM_PORT = 'COM4'
+
 # Constants for table
 STATUS_PENDING = 'pending'
 STATUS_WAITING = 'waiting'
@@ -242,7 +245,7 @@ def send_next_order():
 # Attempt to open serial connection
 ser = serial.Serial()
 ser.baudrate = 9600
-ser.port = 'COM4'
+ser.port = COM_PORT
 ser.open()
 if(not ser.is_open):
     print("Error opening COM port")
