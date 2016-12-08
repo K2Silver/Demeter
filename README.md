@@ -28,12 +28,12 @@ TODO: MORE INTRODUCTION INFO
 4. 4 x [Voss Bottle](https://www.amazon.com/VOSS-Artesian-Water-Plastic-Bottles/dp/B002EM2J06/ref=pd_bxgy_325_3?_encoding=UTF8&pd_rd_i=B002EM2J06&pd_rd_r=F428FAC6MR1H7VTJJ12T&pd_rd_w=UQdBr&pd_rd_wg=rQnCA&refRID=F428FAC6MR1H7VTJJ12T&th=1)
 5. 4 x Servos (for ingredients) [HK 15298 Used](https://hobbyking.com/en_us/hobbykingtm-hk15298-high-voltage-coreless-digital-servo-mg-bb-15kg-0-11sec-66g.html)
 6. 1 x Servo (for bread) [Towerpro MG996R Used](https://hobbyking.com/en_us/towerpro-mg996r-10kg-servo-10kg-0-20sec-55g.html)
-7. External Power Supply (TODO: Power supply link)
-8. External Power Supply Barrel Jack (TODO: LINK)
-9. 2 PCs (1 for mbed sandwich server, 1 for delivery robot)
-10. Wood/Cardboard for SandwichMaker Frame
+7. [Wall Adapter Power Supply 5V DC 2A](https://www.sparkfun.com/products/12889)
+8. [DC Barrel Jack Adapter](https://www.sparkfun.com/products/10811)
+9. Windows PC (capable of running C# and Python) which will connect to Create 2
+10. Computer (capable of running Python) which will control Sandwich Dispenser
+11. Wood/Cardboard for SandwichMaker Frame
 
-* Make sure that the ground of the servo and mbed are connected.
 
 # Installation Instructions
 
@@ -255,17 +255,24 @@ The following steps detail how to create the Amazon Alexa SandwichMaker skill. T
 	The following commands orders a sandwich with lettuce and tomatoes delivered to bedroom. The second command confirms the order. If there are no errors, the Lambda Response should respond with a JSON object.
 
 	![Alexa Enable Skill](images/tutorial/alexa_try_test.png)
-    ![Alexa Enable Skill](images/tutorial/alexa_try_test_2.png)
+	![Alexa Enable Skill](images/tutorial/alexa_try_test_2.png)
 
 
 
 ## <a name="sandwich_maker_server"></a>Sandwich Maker Mbed and Server Code
 
-The mbed is used to move the servos to dispense the ingredients and bread. Mechanisms to dispense are TODO EXPLAIN. The mbed code responds to commands through RPC, sent via the USB virtual COM port. Another computer will run the python script to check the DynamoDB database and send the appropriate commands to the mbed.
+The mbed is used to move the servos to dispense the ingredients and bread. The mbed code responds to commands through RPC, sent via the USB virtual COM port. A computer will run the Python script to check the DynamoDB database and send the appropriate commands to the mbed.
+
+Mechanisms to dispense the bread and ingredients are implementation dependent. For this project, Voss bottles were used to hold the ingredients. The bottom of the bottles were cut off, and the bottles themselves were fixed upside down onto a wooden frame. The servos open and close the bottle with a cardboard flap to dispense ingredients. For the bread, a large flap was used to push the bread stacked vertically in a container, one at a time.
+
+   ![Dispense Ingredients](images/gallery/dispense_ingredients.jpg)
 
 ### 2.1 Wiring Tables
 
-TODO: Explain wiring and building the thing?
+Wiring the servos and mbed microcontroller is fairly simple. The mbed drives all five servos (1 for bread + 4 for ingredients), so they must be connected to a PWM capable output pin. Since the mbed cannot drive all servos, an external power supply is needed. This project uses a wall adapter poewr supply connected to a barrel jack, which plugs into the breadboard to provide power to the servos.
+
+![Dispense Ingredients](images/gallery/mbed_wiring_servos.jpg)
+![Dispense Ingredients](images/gallery/mbed_wiring.jpg)
 
 #### Wiring for Mbed and Servos
 | mbed Pin |Servo        |
@@ -292,6 +299,9 @@ TODO: Explain wiring and building the thing?
 | 5V       | Servo I3 Power (red) |
 | 5V       | Servo I4 Power (red) |
 | 5V       | Servo Bread Power (red) |
+
+
+* Make sure that the ground of the servo and mbed are connected.
 
 ### 2.2 Mbed Code Download
 
@@ -629,25 +639,30 @@ The delivery robot used for the project was the Roomba Create 2. A computer was 
 
 Run the `sandwich_maker.py` file from the `/src/sandwich_maker` directory. Make sure that `COM_PORT` variable in the Python script matches the COM port number of the mbed. Ensure that the `config.json` has the correct key and password to access the DynamoDB database.
 
-TODO: SCREENSHOT CORRECT BEHAVIOR
+If the database access is successful, the script should show the following, checking every 10 seconds.
+
+![Running Sandwich Maker Python](images/gallery/running_sandwich_maker.png)
 
 ## 2. Start Robot Application
 
 Connect the computer running the C# application to the Create 2 robot using the provided USB connector. Build and start the C# GUI Application DeliveryRobot using Visual Studio.
 
-TODO: SCREENSHOT CORRECT BEHAVIOR
+![GUI Application](images/gallery/delivery_robot_gui.png)
 
 Select the correct COM Port from the dropdown menu.
 
-TODO: SCREENSHOT
+![Running Sandwich Maker Python](images/gallery/delivery_robot_gui_com.png)
 
-Enter "Row" and "Column" values for the map of the area. Click "Generate". This generates a matrix of square buttons as shown below.
+Enter "Row" and "Column" values for the map of the area. Click "Generate". This generates a matrix of square buttons. Click on the buttons to change the property of the block.
 
-TODO: SCREENSHOT AFTER GENERATE
+* Black : wall
+* White : open
+* Blue : start
+* Red : destination
 
-Clicking on a square turns it into a dark square, which represents a wall. Clicking on it again will turn it into a "Start" or "Finish" block. There can only be one "Start" block, which designates the location of the sandwich maker. There can be multiple "Finish" blocks, depending on how many destinations are allowed. Since these maps become tedious to generate, the "Export" button allows saving maps as text maps. These maps can then be imported later using the "Import" button.
+![Running Sandwich Maker Python](images/gallery/delivery_robot_gui_dest.png)
 
-TODO: SCREENSHOTS FOR SELECTING START AND FINISH
+Since these maps become tedious to generate, the "Export" button allows saving maps as text maps. These maps can then be imported later using the "Import" button.
 
 Click the "Start" button. The Python script should run every 10 seconds (which opens a python script window) to check for any updates to the DynamoDB database.
 
@@ -656,11 +671,15 @@ Click the "Start" button. The Python script should run every 10 seconds (which o
 TODO: Diagram showing the interaction methods.
 
 ## Gallery
-TODO: Post gallery
+
+![Gallery Image 1](images/gallery/project_gallery_1.jpg)
+![Gallery Image 2](images/gallery/project_gallery_2.jpg)
+![Gallery Image 3](images/gallery/project_gallery_3.jpg)
+![Gallery Image 4](images/gallery/project_gallery_4.jpg)
 
 ## Videos
 TODO: Post working video
 
 ## FAQ
-* Connecting to GTother TODO
+1. If connecting Amazon Dot Echo to the GTother, authorize the MAC address of the Dot (shown in the network setup of the smartphone application) through the [LAWN site](https://auth.lawn.gatech.edu/index.php).
 

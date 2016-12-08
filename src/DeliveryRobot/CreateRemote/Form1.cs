@@ -359,7 +359,6 @@ namespace CreateRemote
                 if ((command.Code > 7) || (command.Code < 0))
                 {
                     SetText(textBoxReceived, "Invalid");
-                    btnSend.Enabled = true;
                     return;
                 }
                 // Show current command in square brackets
@@ -581,12 +580,6 @@ namespace CreateRemote
         {
             return (short) ((x % m + m) % m);
         }
-    
-        // Command Input
-        private void textBoxComand_TextChanged(object sender, EventArgs e)
-        {
-
-        }
 
         // Send commands with button click
         private void buttonSend_Click(object sender, EventArgs e)
@@ -630,8 +623,8 @@ namespace CreateRemote
 
         // Button dimensions and placement
         static readonly int BUTTON_SIZE = 20;
-        static readonly int BUTTON_LEFT_MARGIN = 750;
-        static readonly int BUTTON_TOP_MARGIN = 100;
+        static readonly int BUTTON_LEFT_MARGIN = 625;
+        static readonly int BUTTON_TOP_MARGIN = 32;
 
         // Add buttons to form
         private void showMap(Map map)
@@ -867,11 +860,28 @@ namespace CreateRemote
                 btnArray[i].Click += new System.EventHandler(toggleButton);
             }
 
+
             // Initialize destination dictionary
             this.destinations = new Dictionary<String, int[]>();
 
-            // Add destinations to dictionary
-            //TODO.
+
+            // Parse destinations
+            if (words.Length > rowNum * colNum + 2)
+            {
+                String[] destList = words[rowNum * colNum + 2].Split(';');
+                foreach (String dest in destList)
+                {
+                    String[] tokens = dest.Split('=');
+                    String[] loc = tokens[1].Split(':');
+                    int row, col;
+                    Int32.TryParse(loc[0], out row);
+                    Int32.TryParse(loc[1], out col);
+                    this.destinations.Add(tokens[0], new int[] { row, col });
+                    btnArray[row * colNum + col].BackColor = COLOR_FINISH_BUTTON;
+                    btnArray[row * colNum + col].Text = tokens[0];
+                    this.numDest++;
+                }
+            }
         }
 
         // Check if a start square exists in the button array
