@@ -8,10 +8,12 @@ Automatic sandwich maker and delivery robot, all through Amazon Alexa.
 * Vuong Tran - TODO: EMAIL HERE
 
 ## Introduction
-This project is an automatic sandwich maker and delivery robot.
-TODO: MORE INTRODUCTION INFO
 
-## Features
+The project allows users to order custom sandwiches to a specified location using voice commands. 
+
+![Project Photo](images/gallery/final_project.jpg)
+
+### Features
 
 * Use voice to order sandwiches via Alexa
 * Cancellation and status checking of orders via Alexa
@@ -19,6 +21,20 @@ TODO: MORE INTRODUCTION INFO
 * Delivery robot to deliver sandwich to destination given via Alexa
 * Return of delivery robot to sandwich dispenser
 * Synchronization of data between Alexa interaction, sandwich dispenser, and delivery robot
+
+### Modules 
+
+The project consists of three modules that work together.
+
+1. An Amazon Echo Dot and Alexa Skill is used to parse the voice and extract useful data. The data is sent to a lambda function, which handles inserion of the ordre into the database.
+2. A sandwich maker (dispenser) makes the sandwich based on the order and places it onto the delivery robot. The device then updates the status of the order.
+3. The delivery robot delivers the sandwich to the specified location based on the order in the database. When the order is delivered, the robot returns to the sandwich maker and deletes the order from the database.
+
+
+### Block Diagram
+The block diagram below shows the interaction between the modules, with the database used to keep data synchronized.
+
+![Block Diagram](images/gallery/block_diagram.png)
 
 
 ## Parts
@@ -34,6 +50,10 @@ TODO: MORE INTRODUCTION INFO
 10. Computer (capable of running Python) which will control Sandwich Dispenser
 11. Wood/Cardboard for SandwichMaker Frame
 
+
+The diagram below shows the modules and the parts associated with each.
+
+![Parts Connection](images/gallery/parts_connection.png)
 
 # Installation Instructions
 
@@ -668,7 +688,20 @@ Click the "Start" button. The Python script should run every 10 seconds (which o
 
 ## 3. Alexa Interaction
 
-TODO: Diagram showing the interaction methods.
+1. Placing an order
+
+	Use the following sequence of voice commands to place a sandwich order
+	
+	*"I want a sandwich with [ingredients] delivered to [location]"*
+	
+	Alexa should respond with the order. If it is correct, respond with *"yes"* to confirm the order. If not, respond with *"no"* to restart the order.
+	
+2. Check an order
+
+	Say *"Check order"* to check if there is an existing order. The user has the option to cancel the order at this point (unless it is delivering).
+
+**Check the Alexa skill and Lambda function for more details on interaction capabilities**
+
 
 ## Gallery
 
