@@ -3,13 +3,13 @@ Automatic sandwich maker and delivery robot, all through Amazon Alexa.
 
 **ECE 4180 Embedded Systems Design (Fall 2016)**
 
-* Jeremy Cai - TODO: EMAIL HERE
+* Jeremy Cai - xcai41@gatech.edu
 * Kairi Kozuma - kkozuma3@gatech.edu
-* Vuong Tran - TODO: EMAIL HERE
+* Vuong Tran - vtran42@gatech.edu
 
 ## Introduction
 
-The project allows users to order custom sandwiches to a specified location using voice commands. 
+The project allows users to order custom sandwiches to a specified location using voice commands.
 
 ![Project Photo](images/gallery/final_project.jpg)
 
@@ -22,7 +22,7 @@ The project allows users to order custom sandwiches to a specified location usin
 * Return of delivery robot to sandwich dispenser
 * Synchronization of data between Alexa interaction, sandwich dispenser, and delivery robot
 
-### Modules 
+### Modules
 
 The project consists of three modules that work together.
 
@@ -83,25 +83,25 @@ To store and synchronize sandwich order data between the Amazon Dot (Alexa Skill
 3. To enable access to the database from the lambda function (which will be implemented later), it is necessary to create a user. A user provides an ID and password to access certain resources.
 
 	Go to the [IAM Console](https://console.aws.amazon.com/iam/home#/home) and click on the "Users" tab to the left. Click "Add user" to create a new user.
-	
+
 	![DynamoDB Add User](images/tutorial/dynamodb_user_create.png)
-	
+
 	Fill out the "User name" as shown and select "Programmatic access" for Access type. Then click "Next".
-	
+
 	![DynamoDB User Details](images/tutorial/dynamodb_user_details.png)
-	
+
 	Select "Attach existing policies directly" and search for "dynamodb" in the search box. Select "AmazonDynamoDBFullAccess" and "AmazonDynamoDBFullAccesswithDataPipeline". This will allow the lambda function to read and write from the database. Click "Next".
-	
+
 	![DynamoDB Permissions](images/tutorial/dynamodb_user_permissions.png)
 
 	Review user details and click "Create user".
-	
+
 	![DynamoDB Review](images/tutorial/dynamodb_user_review.png)
-	
-	After creating the user, the following is displayed. Copy down the "Access key ID" and "Secret access key". 
-	
+
+	After creating the user, the following is displayed. Copy down the "Access key ID" and "Secret access key".
+
 	![DynamoDB ID and Key](images/tutorial/dynamodb_user_key_pass.png)
-	
+
 	**This is the only time these credentials are shown.**
 
 ### 1.2 Amazon Lambda Response
@@ -169,9 +169,9 @@ The following steps detail how to create the Amazon Alexa SandwichMaker skill. T
 
 3. Copy and paste the intent schema below into the textbox for schema in the interaction model step.
 	* Intents: types of interaction the skill can handle.
-	
+
 	**Intent Schema**
-	
+
 	```
 	{
 	  "intents": [
@@ -218,25 +218,25 @@ The following steps detail how to create the Amazon Alexa SandwichMaker skill. T
 	Since custom slot types are used, allowable values must be declared. Copy and paste the following 	values for the two slot types defined in the intent sche
 
 	* Slots: arguments that are passed with intents.
-	
+
 	For LOCATION:
-	
+
 	```
 	office
 	kitchen
 	bedroom
 	dining room
 	```
-	
+
 	For ORDER_TEXT:
-	
+
 	```
 	lettuce
 	tomatoes
 	cheese
 	onions
 	```
-	
+
 	After inputting the intent schema and custom slot types, the page should appear like the one shown 	below.
 
 	![Schema and Slot](images/tutorial/alexa_interaction_model.png)
@@ -245,7 +245,7 @@ The following steps detail how to create the Amazon Alexa SandwichMaker skill. T
 
 	Sample utterances are ways to invoke the intents and pass arguments into slots as arguments. The format 	is `[INTENT] [some phrase {some slot type} more words {some slot type}]`.
 	The sample utterances used for the sandwich maker is shown below. Copy and paste the utterances into 	the textbox for utterances.
-	
+
 	```
 	OrderIntent make a sandwich with {OrderText} delivered to {Location}
 	OrderIntent make a sandwich with {OrderText} and {OrderText} delivered to {Location}
@@ -326,12 +326,12 @@ Wiring the servos and mbed microcontroller is fairly simple. The mbed drives all
 ### 2.2 Mbed Code Download
 
 1. Mbed Code Download
-	
+
 	The mbed code can be imported to the compiler [here](https://developer.mbed.org/users/K2Silver/code/SandwichMaker/). Alternatively, the binary file is available at `/bin/SandwichMaker_LPC1768.bin`.
 
 2. Test RPC Call
 	To test RPC calls, first connect to the mbed using a USB cable. Use a serial program like RealTerm and open the virtual COM port connection with a baud rate of 9600. Send `/m_sand/run [integer]` through the serial connection, replacing `[integer]` with a number from 0 to 15. The number represents which ingredient to dispense.
-	
+
 	```
 	/*  Bit 0 -> Ingredient 0 needed (1) or not (0) */
 	/*  Bit 1 -> Ingredient 0 needed (1) or not (0) */
@@ -342,11 +342,11 @@ Wiring the servos and mbed microcontroller is fairly simple. The mbed drives all
 3. Mbed Code Walkthrough (Optional Reading)
 
 	This section explains the mbed code in more detail.
-	
+
 	The projects uses the `Servo.h` library and `mbed_rpc.h` library. The `Servo.h` library is useful for moving the servos to dispense ingredients and bread. The `mbed_rpc.h` library is used to handle RPC (Remote Procedure Calls) from the serial port.
-	
+
 	The `move_servos()` function sends out the signals to dispense the bread, each ingredient one by one, and finally another bread.
-	
+
 	```
 	/* Make sandwich, using ingredient code */
 	/*  Ingredient code is bit mask of ingredients needed */
@@ -360,7 +360,7 @@ Wiring the servos and mbed microcontroller is fairly simple. The mbed drives all
 	    wait_ms(1000);
 	    servo_bread = 1; /* Reset position */
 	    wait_ms(1000);
-	
+
 	     /* Dispense ingredient 0 */
 	    if (ingr_code & 0x1) {
 	        servo_ingredient0 = 1; /* Open */
@@ -396,43 +396,43 @@ Wiring the servos and mbed microcontroller is fairly simple. The mbed drives all
 	    wait_ms(1000);
 	}
 	```
-	
+
 	Expose the function through RPC using the following code. The code declares a function `m_sand` that takes an integer argument and passes the argument to the `move_servos()` function declared earlier. For debugging purposes, the argument is output to the LEDs.
-	
+
 	```
 	/* Declare function 'm_sand' exposed via RPC */
 	void m_sand(Arguments *in, Reply *out);
 	RPCFunction rpc_m_sand(&m_sand, "m_sand");
 	void m_sand(Arguments *in, Reply *out)  {
-	
+
 	    /* Get argument */
 	    int ingr_code = in->getArg<int>();
-	
+
 	    /* Output to LEDs for debugging */
 	    mbed_leds = ingr_code;
-	
+
 	    /* Execute the function */
 	    move_servos(ingr_code);
-	
+
 	    /* Set output */
 	    out->putData("SandwichMade");
-	
+
 	    /* Reset LEDs */
 	    mbed_leds = 0;    
 	}
 	```
-	
+
 	The main loop initializes the baud rate for the serial connection, sets up the buffers for the RPC calls, then loops forever to handle any RPC calls.
-	
+
 	```
 	/* Main code */
 	int main() {
 	    /* Set pc serial baud rate */
 	    pc.baud(9600);
-	
+
 	    // receive commands, and send back the responses
 	    char buf[256], outbuf[256];
-	
+
 	    while(1) {
 	        /* Wait for command */
 	        while (!pc.readable()) {
@@ -454,7 +454,7 @@ Wiring the servos and mbed microcontroller is fairly simple. The mbed drives all
 	            pc.getc();
 	        }
 	    }
-	
+
 	}
 	```
 
@@ -463,9 +463,9 @@ Wiring the servos and mbed microcontroller is fairly simple. The mbed drives all
 The source code for the sandwich maker server is locaterd in `/src/sandwich_maker`. Clone or download the repository to access the files. The computer that runs the server will control the mbed via RPC.
 
 1. Install Python libraries
-	
+
 	The sandwich maker server is written in Python and requires certain libraries.
-	
+
 	* `boto3` library: install with `pip install boto3`
 		- Used to authenticate and access DynamoDB hosted on Amazon
 	* `pyserial` library: install with `pip install pyserial`
@@ -474,7 +474,7 @@ The source code for the sandwich maker server is locaterd in `/src/sandwich_make
 2. Configure DynamoDB Key and Password
 
 	To connect to the DynamoDB server hosted on Amazon, the key, passphrase, and region are all necessary. The source code in `/src/sandwich_maker` includes a `config_template.json` file with the following code:
-	
+
 	```
 	{
 	  "AWS_KEY":"YOUR_AWS_KEY_HERE",
@@ -482,19 +482,19 @@ The source code for the sandwich maker server is locaterd in `/src/sandwich_make
 	  "DYNAMODB_REGION":"YOUR_REGION_HERE"
 	}
 	```
-	
+
 	Replace `YOUR_AWS_KEY_HERE` and `YOUR_AWS_PASS_HERE` with the IAM access key ID and secret password copied from the DynamoDB user setup section. More information can be obtained from the [IAM console](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html). Use `us-east-1` for `YOUR_REGION_HERE` (since Amazon Alexa seems to only support this region reliably). Then, rename the `config_template.json` to `config.json`. This file will be used in the python code to authenticate itself to the DynamoDB database.
 
 3. COM Port Configuration
-	
+
 	In the Python code, change the `COM_PORT = 'COM4'` to match the COM port of the mbed. The COM port number can be verified by RealTerm or other terminal applications.
 
 4. Python Sandwich Maker Server Walkthrough (Optional Reading)
 
 	The code for the sandwich maker server (which issues commands to the mbed via RPC) is written in Python. The server code relies heavily on `boto3` library, which allows API calls to the Amazon DynamoDB database.
-	
+
 	The following are the table column names. `CustomerId` is used as the primary key.
-	
+
 	```
 	# Column names for table
 	COL_CUSTOMERID = 'CustomerId'
@@ -503,18 +503,18 @@ The source code for the sandwich maker server is locaterd in `/src/sandwich_make
 	COL_LOCATION = 'Location'
 	COL_STATUS = 'OrderStatus'
 	```
-	
+
 	The following are constants used for the `OrderStatus` column in the database.
-	
+
 	```
 	# Constants for table
 	STATUS_PENDING = 'pending'
 	STATUS_WAITING = 'waiting'
 	STATUS_DELIVERING = 'delivering'
 	```
-	
+
 	To access the DynamoDB database, read in the configuration file and open a new session using the key and password.
-	
+
 	```
 	# DynamoDB Access information
 	# Read key information from config file
@@ -529,9 +529,9 @@ The source code for the sandwich maker server is locaterd in `/src/sandwich_make
 	              region_name=DYNAMODB_REGION)
 	dynamodb = dynamodb_session.resource('dynamodb')
 	```
-	
+
 	The list of ingredients allowed are defined in the server code, along with a parser function to extract the ingredients and convert to an integer code.
-	
+
 	```
 	# Helper function to parse list of ingredients and conver to code for dispenser
 	ingredients_valid = ['lettuce', 'tomatoes', 'cheese', 'onions']
@@ -542,9 +542,9 @@ The source code for the sandwich maker server is locaterd in `/src/sandwich_make
 	    'onions': 8
 	}
 	```
-	
+
 	The Python code below sends the RPC command after parsing the ingredient string.
-	
+
 	```
 	# Dispatch order by sending commands to microcontroller
 	def dispatch_order(order):
@@ -560,9 +560,9 @@ The source code for the sandwich maker server is locaterd in `/src/sandwich_make
 	        print (response)
 	    print ("Done making sandwich")
 	```
-	
+
 	This function is called in the main loop to get the next order and dispatch it to the mbed. If the mbed successfully receives and executes the RPC call, then the code below updates the status from `pending` to `waiting`, which will allow the robot to notice that a sandwich is ready to be delivered.
-	
+
 	```
 	# Send next order by dispatching order to microcontroller and updating status
 	def send_next_order():
@@ -571,22 +571,22 @@ The source code for the sandwich maker server is locaterd in `/src/sandwich_make
 	    if (num_orders != 0):
 	        print ("Found next order ...")
 	        next_order = find_next_order(json_response["Items"])
-	
+
 	        # Dispatch order to dispenser
 	        dispatch_order(next_order)
-	
+
 	        # Update status of order to delivering
 	        next_order[COL_STATUS] = STATUS_WAITING
 	        update_order(next_order)
-	
+
 	        # Return true if order updated successfully
 	        return True
 	    else: # Else, return false
 	        return False
 	```
-	
+
 	The main code opens a serial connection with a baud rate of 9600. Change the com port value from `COM4` to whatever COM port that the mbed connects to.
-	
+
 	```
 	# Attempt to open serial connection
 	ser = serial.Serial()
@@ -597,9 +597,9 @@ The source code for the sandwich maker server is locaterd in `/src/sandwich_make
 	    print("Error opening COM port")
 	    sys.exit(1)
 	```
-	
+
 	After opening a serial connection, loop forever until a keyboard interrupt (Ctrl-C). In the loop, check for new orders from the database, waiting 10 seconds in between checks to not overload the server.
-	
+
 	```
 	# Main loop that checks for orders and executes them
 	try:
@@ -612,7 +612,7 @@ The source code for the sandwich maker server is locaterd in `/src/sandwich_make
 	        else:
 	            print ("Delivering now ...")
 	        time.sleep(10) # sleep for 10 seconds (not overload database server)
-	
+
 	# Keyboard interrupt (Ctrl-C) pressed, exit program
 	except KeyboardInterrupt:
 	    ser.close()
@@ -627,7 +627,7 @@ The delivery robot used for the project was the Roomba Create 2. A computer was 
 ### 3.1 Python Setup
 
 1. The C# application relies on python scripts to access the DynamoDB database. This is to simplify the C# application, since it will not have to import the AWS SDK. However, certain Python libraries must be installed.
-	
+
 	* `boto3` library: install with `pip install boto3`
 		- Used to authenticate and access DynamoDB hosted on Amazon
 	* `pyserial` library: install with `pip install pyserial`
@@ -638,7 +638,7 @@ The delivery robot used for the project was the Roomba Create 2. A computer was 
 2. Configure DynamoDB Key and Password
 
 	To connect to the DynamoDB server hosted on Amazon, the key, passphrase, and region are all necessary. The source code in `/src/DeliveryRobot` includes a `config_template.json` file with the following code:
-	
+
 	```
 	{
 	  "AWS_KEY":"YOUR_AWS_KEY_HERE",
@@ -646,7 +646,7 @@ The delivery robot used for the project was the Roomba Create 2. A computer was 
 	  "DYNAMODB_REGION":"YOUR_REGION_HERE"
 	}
 	```
-	
+
 	Replace `YOUR_AWS_KEY_HERE` and `YOUR_AWS_PASS_HERE` with the IAM access key ID and secret password copied from the DynamoDB user setup section. More information can be obtained from the [IAM console](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html). Use `us-east-1` for `YOUR_REGION_HERE` (since Amazon Alexa seems to only support this region reliably). Then, rename the `config_template.json` to `config.json`. This file will be used in the python code to authenticate itself to the DynamoDB database.
 
 ### 3.2 C# Application Setup
@@ -691,11 +691,11 @@ Click the "Start" button. The Python script should run every 10 seconds (which o
 1. Placing an order
 
 	Use the following sequence of voice commands to place a sandwich order
-	
+
 	*"I want a sandwich with [ingredients] delivered to [location]"*
-	
+
 	Alexa should respond with the order. If it is correct, respond with *"yes"* to confirm the order. If not, respond with *"no"* to restart the order.
-	
+
 2. Check an order
 
 	Say *"Check order"* to check if there is an existing order. The user has the option to cancel the order at this point (unless it is delivering).
@@ -710,9 +710,10 @@ Click the "Start" button. The Python script should run every 10 seconds (which o
 ![Gallery Image 3](images/gallery/project_gallery_3.jpg)
 ![Gallery Image 4](images/gallery/project_gallery_4.jpg)
 
-## Videos
-TODO: Post working video
+## Demo Video
+<iframe width="800" height="450"
+src="https://www.youtube.com/embed/hsCl84BXBcY">
+</iframe>
 
 ## FAQ
 1. If connecting Amazon Dot Echo to the GTother, authorize the MAC address of the Dot (shown in the network setup of the smartphone application) through the [LAWN site](https://auth.lawn.gatech.edu/index.php).
-
