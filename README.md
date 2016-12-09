@@ -711,9 +711,8 @@ Click the "Start" button. The Python script should run every 10 seconds (which o
 ![Gallery Image 4](images/gallery/project_gallery_4.jpg)
 
 ## Demo Video
-<iframe width="800" height="450"
-src="https://www.youtube.com/embed/hsCl84BXBcY">
-</iframe>
+
+[![Demo Video](https://img.youtube.com/vi/hsCl84BXBcY/0.jpg)](https://www.youtube.com/watch?v=hsCl84BXBcY)
 
 ## FAQ
 1. If connecting Amazon Dot Echo to the GTother, authorize the MAC address of the Dot (shown in the network setup of the smartphone application) through the [LAWN site](https://auth.lawn.gatech.edu/index.php).
